@@ -1,0 +1,142 @@
+#!/usr/bin/zsh
+# ~/bin/rclonemount-All
+#		Assumes that you want all drives mounted
+#		Unmounting first gives Drive a fresh mount
+PATH="~/.myzfuncs:${PATH}"
+if [ "$(uname)" = "Darwin" ]; then
+	CloudDir="/Users/joe/Cloud"
+else
+	if [ "$EUID" -ne 0 ]
+		then echo "Mount/Umount must be run as root"
+		exit
+	fi
+	CloudDir=/home/Cloud
+fi
+if [ "$1" = "-l" ]; then
+	LOGit="Y"
+	shift
+fi
+checkmount () {
+	if [[ $(/bin/ps axww | egrep "umask=0.*${1}:" | egrep -v "grep") ]]; then
+		echo "\n${1} **Already Mounted...**"
+		return
+	else
+		echo "\n${1} ** NOT Mounted..."
+    printf " Mount Cleanup:"
+    umount ${CloudDir}/${1} > /dev/null 2>&1
+		echo " **OK**"
+		printf " Mounting ${1}..."
+		if [ "$LOGit" = "Y" ]; then
+			LOGitFile="/tmp/rclone.log"
+			rm -rf ${LOGitFile}
+			LOGit="--log-file=${LOGitFile}"
+			LOGitLvl="--log-level DEBUG"
+		else
+			LOGit=""
+		fi
+		if [ "$(uname)" = "Darwin" ]; then
+			rclone cmount --umask=0 ${LOGitLvl} --allow-other --buffer-size 2G --daemon --vfs-cache-mode full ${1}: ${CloudDir}/${1} && echo " **OK**" || echo " **Error(s)**"
+		else
+			rclone mount --umask=0 ${LOGitLvl} --allow-other --buffer-size 2G --daemon --vfs-cache-mode full ${1}: ${CloudDir}/${1} && echo " **OK**" || echo " **Error(s)**"
+		fi
+  fi
+}
+
+for Remote in ${@:-all}; do
+	case ${Remote} in
+		all|ALL )
+			# Checking Google Drive
+			checkmount GDrive
+
+			# Checking Google Drive BC
+			checkmount GDriveBC
+
+			# Checking Google Drive BB
+			checkmount GDriveBB
+
+			# Checking Mega Drive
+			checkmount Mega
+
+			# Checking DropBox
+			checkmount DropBox
+
+			# Checking nc-cissa
+			checkmount nc-cissa
+
+			# Checking nc-joe
+			checkmount nc-joe
+
+			# Checking OneDrive
+			checkmount OneDrive
+
+			# Checking OneDriveST
+			checkmount OneDriveST
+
+			# Checking OneDriveCS
+			checkmount OneDriveCS
+
+			# Checking OneDriveH4
+			checkmount OneDriveH4
+		;;
+
+		GD|gd )
+			# Checking Google Drive
+			checkmount GDrive
+		;;
+
+		GDBC|gdbc )
+			# Checking Google Drive BC
+			checkmount GDriveBC
+		;;
+
+		GDBB|gdbb )
+			# Checking Google Drive BB
+			checkmount GDriveBB
+		;;
+
+		Mega|mega|MEGA )
+			# Checking Mega Drive
+			checkmount Mega
+		;;
+
+		DB|db )
+			# Checking DropBox
+			checkmount DropBox
+		;;
+
+		ncc|nc-cissa )
+			# Checking nc-cissa
+			checkmount nc-cissa
+		;;
+
+		ncj|nc-joe )
+			# Checking nc-joe
+			checkmount nc-joe
+		;;
+
+	OD|od )
+		# Checking OneDrive
+		checkmount OneDrive
+	;;
+
+	ODST|odst )
+		# Checking OneDriveST
+		checkmount OneDriveST
+	;;
+
+	ODCS|odcs )
+		# Checking OneDriveCS
+		checkmount OneDriveCS
+	;;
+
+	ODH4|odh4 )
+		# Checking OneDriveH4
+		checkmount OneDriveH4
+	;;
+
+	* )
+		echo "${i} not found.  Usage: $0 [all|GD|GDBC|Mega|DB|ncc|ncj|OD|ODST|ODCS]"
+	;;
+	esac
+done
+echo ""

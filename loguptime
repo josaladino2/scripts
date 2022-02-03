@@ -1,0 +1,47 @@
+#!/usr/bin/zsh
+# MaxLoad must have a leading zero as a minimum - 0.15
+if [ "$1" = "-r" ]; then
+  Report="Y"
+  shift
+fi
+if [ "$1" = "-t" ]; then
+  Test="Y"
+  shift
+fi
+if [ "$1" = "-f" ]; then
+  File="Y"
+  shift
+fi
+MaxLoad=${1:-1}
+LoadPercent="$(cpuload)"
+if [ "${Report}" = "Y" ]; then
+	cat ~/uptime.log
+fi
+if [ "${Test}" = "Y" ]; then
+	if [ "${File}" = "Y" ]; then
+		input="uptime.log"
+		while IFS= read -r line
+		do
+			# do something on $line
+			cpuload=$(echo ${line}| sed -e 's/^.*: //'|sed -e 's/, .*$//')
+		if [[ "${cpuload}" > "${MaxLoad}" ]]; then
+			lineout=$(echo "[${LoadPercent}] Cload: ${cpuload} - MLoad: ${MaxLoad} - $(date +"%m-%d-%Y")${line}"| \
+				tr -s "[:blank:]")
+			echo "${lineout}"
+		fi
+		done < $input
+	else
+		cpuload=$(uptime| sed -e 's/^.*: //'|sed -e 's/, .*$//')
+		if [[ "${cpuload}" > "${MaxLoad}" ]]; then
+			lineout=$(echo "[${LoadPercent}] - Cload: ${cpuload} - MLoad: ${MaxLoad} - $(date +"%m-%d-%Y")$(uptime)"| \
+				tr -s "[:blank:]")
+			echo "${lineout}"
+		fi
+	fi
+else
+	cpuload=$(uptime| sed -e 's/^.*: //'|sed -e 's/, .*$//')
+	if [[ "${cpuload}" > "${MaxLoad}" ]]; then
+		lineout="$(echo $(date +"%m-%d-%Y")$(uptime)|tr -s "[:blank:]") [${LoadPercent}]"
+		echo "${lineout}" >> ~/uptime.log
+	fi
+fi

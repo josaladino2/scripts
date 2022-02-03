@@ -1,0 +1,95 @@
+#!/usr/bin/zsh
+STARTTIME=$(date +%s)
+BackupVer="N"
+FileName="RUSA-Files-$(date +"%Y%m%d")"
+FileDateDir="$(date +%F)"
+RStorage="DropBox"
+DestDir="${RStorage}:/RUSALR-Backups"
+WorkDir="RUSALR-Backups"
+localDir=${WorkDir}/${FileDateDir}
+mkdir -p /${localDir}
+remoteDir=${DestDir}/${FileDateDir}
+SourceDir="var/nc_data/joe"
+SourceFiles='files/@RUSA-Library-Resources'
+SourceFilesVer='files_versions/@RUSA-Library-Resources'
+#########################################################
+t_errors=0
+d_errors=0
+cd /${SourceDir}
+#########################################################
+# Creating ${FileName}-ver.tgz
+#########################################################
+if [ $BackupVer = "Y" ]; then
+  printf "\n** Creating local /${WorkDir}/${FileDateDir}/${FileName}-ver.tgz..."
+  /usr/bin/tar -czf /${WorkDir}/${FileDateDir}/${FileName}-ver.tgz ${SourceFilesVer} >/dev/null 2>&1
+  result=$?
+  if [[ result -eq 0 ]]; then
+    fg_green "Done."
+  else
+    fg_red1 "FAILED!"
+    t_errors=$((t_errors+1))
+    exit 1
+  fi
+fi
+#########################################################
+# Creating ${FileName}.tgz
+#########################################################
+printf "\n** Creating local /${WorkDir}/${FileDateDir}/${FileName}.tgz..."
+/usr/bin/tar -czf /${WorkDir}/${FileDateDir}/${FileName}.tgz ${SourceFiles} >/dev/null 2>&1 
+result=$?
+if [[ result -eq 0 ]]; then
+  fg_green "Done."
+else
+  fg_red1 "FAILED!"
+  t_errors=$((t_errors+1))
+  exit 1
+fi
+#########################################################
+# Move files to remote storage
+#########################################################
+cd /${WorkDir}
+printf "  Moving /${WorkDir}/${FileDateDir} to ${remoteDir}..."
+rclone moveto ${FileDateDir} ${remoteDir} --cache-db-purge
+result=$?
+if [[ result -eq 0 ]]; then
+  fg_green "Done."
+  rm -rf /${localDir}
+else
+  fg_red1 "FAILED!"
+  t_errors=$((t_errors+1))
+  exit 1
+fi
+#########################################################
+# Delete old folders
+#########################################################
+maxNrOfBackups=6
+echo "**** Delete Old RUSALR Backups"
+nrOfBackups=$(rclone lsf ${DestDir} | wc -l)
+if [[ nrOfBackups -gt maxNrOfBackups ]]; then
+  echo "  ** Removing old backups"
+  rclone lsf ${DestDir} --include /2*/ --max-depth 1 | \
+    sort -r | tail -$(( nrOfBackups - maxNrOfBackups )) | \
+    while read -r dirToRemove; do
+      echo "${DestDir}/${dirToRemove}"
+      printf "    rclone purge ${DestDir}/${dirToRemove}..."
+      rclone purge ${DestDir}/${dirToRemove} #--drive-use-trash=false
+      results=$?
+      if [[ results -eq 0 ]]; then
+        echo "Done"
+      else
+        echo "Errors."
+      fi
+    done
+else
+  echo "  ** No Old Backups to Delete"
+fi
+echo
+#########################################################
+# Show number of d_errors and t_errors during Backup transfer.
+#########################################################
+printf "** Backuip/Transfer completed with ${d_errors} Delete errors and ${t_errors} Transfer errors.\n\n"
+# Show time to do the transfer
+#########################################################
+STOPTIME=$(($(date +%s)-STARTTIME))
+show_time ${STOPTIME} "**** ASLR-Backup completed in"
+echo

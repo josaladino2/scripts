@@ -1,0 +1,65 @@
+#!/usr/bin/zsh
+# Users Tarbal
+STARTTIME=$(date +%s)
+FileDate="${1:-$(date +%F)}"
+Cloud="DropBox"
+remoteDir="${Cloud}:/usertarbal"
+localDir="usertarbal"
+cloudDir="home/Cloud/${Cloud}/${localDir}"
+cd /
+[ ! -d /${localDir} ] && mkdir -p /${localDir}
+[ ! -d /${localDir}/${FileDate} ] && mkdir -p /${localDir}/${FileDate}
+
+check_error () {
+	local result=${1}
+	if [ ${result} -eq 0 ] || [ ${result} -eq 1 ]; then
+		printf "Done! (${result})\n\n"
+	else
+		printf "FAILED! (${result})\n\n"
+		r_errors=$((r_errors+1))
+	fi
+}
+
+backupNow () {
+# Backup ${Dir} directory
+	local User=${1}
+	local Dir=${2}
+	printf "\n**** ${User} ****"
+	FileName="${User}-dir-${FileDate}.tgz"
+	rm -f /${localDir}/${FileDate}/${FileName} >/dev/null 2>&1
+	printf "\n** Making ${User} tarbal (/${localDir}/${FileDate}/${FileName})..."
+	tar -czf /${localDir}/${FileDate}/${FileName} -X /root/scripts/${User}-Exclude ${Dir}
+	results=$?
+	check_error ${results}
+}
+
+# Work starts here
+if \ls "${HOME}/usertarbal\*.err" >/dev/null 2>&1; then
+	rm -f ${HOME}/usertarbal*.err > /dev/null 2>&1
+fi
+r_errors=0
+for U D in root root y4x home/y4x elton home/elton tim home/tim joe home/joe
+do
+	backupNow ${U} ${D}
+	ls -hla /${localDir}/${FileDate}/${FileName}
+done
+# Show number of t_errors during Backup transfer.
+echo -e "\nTarbals completed with ${r_errors} errors.\n"
+# Move files to Dropbox
+printf "Moving local tarbal files to ${remoteDir}/${FileDate}/..."
+rclone moveto /${localDir}/${FileDate} ${remoteDir}/${FileDate} --cache-db-purge 2>/root/${localDir}${FileDate}.err
+#mv /${localDir}/${FileDate} /${cloudDir}
+results=$?
+if [ ${results} -eq 0 ] || [ ${results} -eq 1 ]; then
+	echo "Done."
+else
+	echo "Errors"
+fi
+# Show time to do the transfer
+STOPTIME=$(($(date +%s)-STARTTIME))
+echo
+echo "**** /usertarbal completed in $(show_time ${STOPTIME})"
+echo
+if [ ! -s ${HOME}/${localDir}${FileDate}.err ]; then
+	rm -f ${HOME}/${localDir}${FileDate}.err ] < /dev/null 2>&1
+fi

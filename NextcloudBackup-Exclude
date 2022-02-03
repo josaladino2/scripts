@@ -1,0 +1,9 @@
+./*.log
+./*/cache/*
+./*/files_external/*
+./*/files_trashbin/*
+./*/files_versions/*
+./ownbackup/*
+*/tmp/*
+*/.*un~
+*/*un~
