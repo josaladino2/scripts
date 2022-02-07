@@ -45,11 +45,21 @@ backupnow () {
 
 movebackup () {
 	local errors=0
-	printf "*** Uploading /${localDir} to ${DestDrive}:/${DestDir}/${FileDateDir}..."
-	rclone moveto ${FileDateDir} ${DestDrive}:/${DestDir}/${FileDateDir} >/dev/null 2>&1 
+	rm -f ${HOME}/rclonedb.log
+	printf "*** Copying /${localDir} to ${DestDrive}:/${DestDir}/${FileDateDir}..."
+	rclone copy ${FileDateDir} ${DestDrive}:/${DestDir}/${FileDateDir} \
+		--cache-db-purge \
+		--log-file "${HOME}/tmp/rclonedb.log" \
+		--log-level INFO \
+		--buffer-size 64M \
+		--transfers 3 \
+		--drive-use-trash=true \
+		--dropbox-chunk-size 150Mi >/dev/null 2>&1 
 	results=$?
 	if [ $results = 0 ]; then
 		echo "Done."
+		printf "\n%s" "Deleting /${localDir}..."
+		rm -rf /${localDir} >/dev/null 2>&1 && echo "Done." || { echo "Errors."; terrors=$((terrors+1)); }
 	else
 		printf " Errors.\n"
 		terrors=$((terrors+1))
@@ -61,7 +71,7 @@ movebackup () {
 # Delete old backups
 #
 deleteoldbackups () {
-	maxNrOfBackups=6
+	maxNrOfBackups=8
 	echo "\n**** Delete Old Nextcloud Backups"
 	nrOfBackups=$(rclone lsf ${DestDrive}:/${DestDir} --include "/2*/" --max-depth 1 | wc -l)
 	if [ ${nrOfBackups} -gt ${maxNrOfBackups} ]; then
@@ -71,7 +81,7 @@ deleteoldbackups () {
 			while read -r dirToRemove; do
 				echo "${DestDrive}:/${DestDir}/${dirToRemove}"
 				printf "    rclone purge ${DestDrive}:/${DestDir}/${dirToRemove}..."
-				rclone purge ${DestDrive}:/${DestDir}/${dirToRemove} --drive-use-trash=false
+				rclone purge ${DestDrive}:/${DestDir}/${dirToRemove} --drive-use-trash=true
 				results=$?
 				if [ $results = 0 ]; then
 					echo "Done"
