@@ -9,54 +9,64 @@ FileName7=$(date +%Y%m%d --date="7 days ago")
 DestDrive="DropBox"
 DestDir="MySQL-Backups"
 CloudDir="home/Cloud"
+terrors=0
 mkdir -p /${DestDir}/${FileDateDir}/
 localDir=${DestDir}/${FileDateDir}/
 mkdir -p /${CloudDir}/${DestDrive}/${DestDir}/${FileDateDir}/
 remoteDir=${DestDrive}:/${DestDir}/${FileDateDir}/
 #/root/scripts/rclonemount DB
-results=$?
-if [ $results -eq 0 ]; then
-	cd "/${DestDir}"
+#results=$?
+#if [ $results -eq 0 ]; then
+#	cd "/${DestDir}"
 	# Functions used
 	#. ~/.bash_functions
+cd "/${DestDir}"
 
 backupnow () {
 	local db=${1}
-	local errors=0
 	ThisFile="${db}-${FileName}.sql.gz"
 	printf "*** ${db}\n"
-	printf "Exporting ${db} database to ${DestDir}/${FileDateDir}/${ThisFile}"
+	printf "Exporting ${db} database(s) to /${DestDir}/${FileDateDir}/${ThisFile}..."
 	if [ "${db}" = "all" ]; then
 		{ /usr/bin/mysqldump -uroot --all-databases | gzip -c > ${FileDateDir}/${ThisFile}; } >/dev/null 2>&1 && \
-			printf " Done\n" || { printf " Errors.\n"; errors=$((errors+1)); }
+			printf "Done.\n" || \
+			{ printf " Errors.\n"
+				terrors=$((terrors+1))
+				printf "\n${db} DB Backup with errors.\n\n"; }
 	else
 		{ /usr/bin/mysqldump -uroot --databases ${db} | gzip -c > ${FileDateDir}/${ThisFile}; } >/dev/null 2>&1 && \
-		printf " Done\n" || { printf " Errors.\n"; errors=$((errors+1)); }
+			printf "Done.\n" || \
+			{ printf " Errors.\n"
+				terrors=$((terrors+1))
+				printf "\n${db} DB Backup with errors.\n\n"; }
 	fi
 	echo
 }
 
 movebackup () {
-	printf "*** Uploading ${FileDateDir} to ${DestDrive}:/${DestDir}/${FileDateDir}..."
-	rclone moveto ${FileDateDir} ${DestDrive}:/${DestDir}/${FileDateDir} >/dev/null 2>&1 && \
+	local errors=0
+	printf "*** Uploading /${localDir} to ${DestDrive}:/${DestDir}/${FileDateDir}..."
+	rclone moveto ${FileDateDir} ${DestDrive}:/${DestDir}/${FileDateDir} >/dev/null 2>&1 
 	results=$?
 	if [ $results = 0 ]; then
-		echo "Done"
+		echo "Done."
 	else
-		echo "Errors."
+		printf " Errors.\n"
+		terrors=$((terrors+1))
+		printf "\nUploaded Backup with errors.\n\n"
+		terrors=$((terrors+1))
 	fi
-	printf "\n${db} DB Backup with ** ${errors} ** errors.\n\n"
 }
 
 # Delete old backups
 #
 deleteoldbackups () {
-	maxNrOfBackups=10
-	echo "**** Delete Old Nextcloud Backups"
-	nrOfBackups=$(rclone lsf ${DestDrive}:/${DestDir} --include /2*/ --max-depth 1 | wc -l)
+	maxNrOfBackups=6
+	echo "\n**** Delete Old Nextcloud Backups"
+	nrOfBackups=$(rclone lsf ${DestDrive}:/${DestDir} --include "/2*/" --max-depth 1 | wc -l)
 	if [ ${nrOfBackups} -gt ${maxNrOfBackups} ]; then
 		echo "  ** Removing old backups"
-		rclone lsf ${DestDrive}:/${DestDir} --include /2*/ | \
+		rclone lsf ${DestDrive}:/${DestDir} --include "/2*/" | \
 			sort -r | tail -$(( nrOfBackups - maxNrOfBackups )) | \
 			while read -r dirToRemove; do
 				echo "${DestDrive}:/${DestDir}/${dirToRemove}"
@@ -66,7 +76,7 @@ deleteoldbackups () {
 				if [ $results = 0 ]; then
 					echo "Done"
 				else
-					echo "Errors."
+					echo "Errors."; errors=$((errors+1))
 				fi
 			done
 	else
@@ -85,15 +95,18 @@ deleteoldbackups () {
 	backupnow "all"
 	movebackup
 	deleteoldbackups
-	printf "***rclone lsf for ${DestDrive}:/${DestDir}/${FileDateDir}/* files.\n"
-	rclone lsf --format "tsp" --separator "	" ${DestDrive}:/${DestDir}/${FileDateDir}
-	printf "\n***About/Size of ${DestDrive}/${DestDir}/${FileDateDir}:\n"
+	printf "*** rclone lsf for ${DestDrive}:/${DestDir}.\n"
+	rclone tree ${DestDrive}:/${DestDir} --exclude "/Save*/" --human-readable 
+#	printf "*** rclone lsf for ${DestDrive}:/${DestDir}/${FileDateDir}/* files.\n"
+#	rclone lsf --format "tsp" --separator "	" ${DestDrive}:/${DestDir}/${FileDateDir} --human-readable 
+	printf "\n*** About/Size of ${DestDrive}/${DestDir}/${FileDateDir}:\n"
 	rclone about ${DestDrive}:/
 	# Show time to do the transfer
+	printf "\nDB Backups completed with ** ${terrors} ** total errors.\n\n"
 	STOPTIME=$(($(date +%s)-STARTTIME))
+	show_time ${STOPTIME} "**** MySQL ${DestDrive}:/${DestDir}/${FileDateDir} completed in"
 	echo
-	echo "**** MySQL-Backup ${DestDrive}:/${DestDir}/${FileDateDir} completed in $(show_time ${STOPTIME})"
-else
-	echo
-	echo "${DestDrive} not mounted"
-fi
+#else
+#	echo "${DestDrive} not mounted"
+#	echo
+#fi

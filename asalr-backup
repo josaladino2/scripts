@@ -67,7 +67,7 @@ echo "**** Delete Old ASALR Backups"
 nrOfBackups=$(rclone lsf ${DestDir} | wc -l)
 if [[ nrOfBackups -gt maxNrOfBackups ]]; then
   echo "  ** Removing old backups"
-  rclone lsf ${DestDir} --include /2*/ --max-depth 1 | \
+  rclone lsf ${DestDir} --include "/2*/" --max-depth 1 | \
     sort -r | tail -$(( nrOfBackups - maxNrOfBackups )) | \
     while read -r dirToRemove; do
       echo "${DestDir}/${dirToRemove}"
