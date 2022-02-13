@@ -323,15 +323,15 @@ if [[ BackupStep -lt 3 ]] && [ "${backupInternalData}" = true ]; then
 	echo "**** Backup Nextcloud Local Internal Data Directory"
 	STARTTIME2=$(date +%s)
 	if [ "$ignoreUpdaterBackups" = true ]; then
-		echo "  Ignoring updater backup directory"
-		printf "  Creating backup of Nextcloud Internal data directory..."
+		echo "  ** Ignoring updater backup directory"
+		printf "  ** Creating backup of Nextcloud Internal data directory..."
 		if [ "$useCompression" = true ] ; then
 		tar -cp${Verbose}zf "${sourceDir}/${fileNameBackupDataDir}" ${ExcludeTheseFiles} --exclude="updater-*" -C "${nextcloudDataDir}" . 2>>${HOME}/NextcloudBackup.err
 		else
 			tar -cp${Verbose}f "${sourceDir}/${fileNameBackupDataDir}" ${ExcludeTheseFiles} --exclude="updater-*" -C "${nextcloudDataDir}" . 2>>${HOME}/NextcloudBackup.err
 		fi
 	else
-		printf "  Creating backup of Nextcloud Internal data directory..."
+		printf "  ** Creating backup of Nextcloud Internal data directory..."
 		if [ "$useCompression" = true ] ; then
 			tar -cp${Verbose}zf "${sourceDir}/${fileNameBackupDataDir}" ${ExcludeTheseFiles} -C "${nextcloudDataDir}" . 2>>${HOME}/NextcloudBackup.err
 		else
@@ -368,15 +368,15 @@ if [[ BackupStep -lt 4 ]] && [ "${backupExternalData}" = true ]; then
 	if [ "${backupExternalData}" = true ]; then
 		STARTTIME2=$(date +%s)
 		if [ "$ignoreUpdaterBackups" = true ]; then
-			echo "  Ignoring updater backup directory"
-			printf "  Creating backup of Nextcloud local External Data Directory..."
+			echo "  ** Ignoring updater backup directory"
+			printf "  ** Creating backup of Nextcloud local External Data Directory..."
 			if [ "$useCompression" = true ]; then
 				tar -cp${Verbose}zf "${sourceDir}/${fileNameBackupExternalDataDir}" ${ExcludeTheseFiles} --exclude="updater-*/backups/*" -C "${nextcloudLocalExternalDataDir}" . 2>>${HOME}/NextcloudBackup.err
 			else
 				tar -cp${Verbose}f "${sourceDir}/${fileNameBackupExternalDataDir}" ${ExcludeTheseFiles} --exclude="updater-*/backups/*" -C "${nextcloudLocalExternalDataDir}" . 2>>${HOME}/NextcloudBackup.err
 			fi
 		else
-			printf "  Creating backup of Nextcloud local External Data Directory..."
+			printf "  ** Creating backup of Nextcloud local External Data Directory..."
 			if [ "$useCompression" = true ] ; then
 				tar -cp${Verbose}zf "${sourceDir}/${fileNameBackupExternalDataDir}" ${ExcludeTheseFiles} -C "${nextcloudLocalExternalDataDir}" . 2>>${HOME}/NextcloudBackup.err
 			else

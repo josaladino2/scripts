@@ -20,7 +20,7 @@ cd /${SourceDir}
 # Creating ${FileName}-ver.tgz
 #########################################################
 if [ $BackupVer = "Y" ]; then
-  printf "\n** Creating local /${WorkDir}/${FileDateDir}/${FileName}-ver.tgz..."
+  printf "**** Creating local /${WorkDir}/${FileDateDir}/${FileName}-ver.tgz..."
   /usr/bin/tar -czf /${WorkDir}/${FileDateDir}/${FileName}-ver.tgz ${SourceFilesVer} >/dev/null 2>&1
   result=$?
   if [[ result -eq 0 ]]; then
@@ -30,33 +30,38 @@ if [ $BackupVer = "Y" ]; then
     t_errors=$((t_errors+1))
     exit 1
   fi
+  echo
 fi
 #########################################################
 # Creating ${FileName}.tgz
 #########################################################
-printf "\n** Creating local /${WorkDir}/${FileDateDir}/${FileName}.tgz..."
+printf "**** Creating local /${WorkDir}/${FileDateDir}/${FileName}.tgz..."
 /usr/bin/tar -czf /${WorkDir}/${FileDateDir}/${FileName}.tgz ${SourceFiles} >/dev/null 2>&1 
 result=$?
 if [[ result -eq 0 ]]; then
   fg_green "Done."
+  echo
 else
   fg_red1 "FAILED!"
   t_errors=$((t_errors+1))
+  echo
   exit 1
 fi
 #########################################################
 # Move files to remote storage
 #########################################################
 cd /${WorkDir}
-printf "  Moving /${WorkDir}/${FileDateDir} to ${remoteDir}..."
+printf "  ** Moving /${WorkDir}/${FileDateDir} to ${remoteDir}..."
 rclone moveto ${FileDateDir} ${remoteDir} --cache-db-purge
 result=$?
 if [[ result -eq 0 ]]; then
   fg_green "Done."
   rm -rf /${localDir}
+  echo
 else
   fg_red1 "FAILED!"
   t_errors=$((t_errors+1))
+  echo
   exit 1
 fi
 #########################################################
@@ -70,7 +75,7 @@ if [[ nrOfBackups -gt maxNrOfBackups ]]; then
   rclone lsf ${DestDir} --include "/2*/" --max-depth 1 | \
     sort -r | tail -$(( nrOfBackups - maxNrOfBackups )) | \
     while read -r dirToRemove; do
-      echo "${DestDir}/${dirToRemove}"
+#      echo "${DestDir}/${dirToRemove}"
       printf "    rclone purge ${DestDir}/${dirToRemove}..."
       rclone purge ${DestDir}/${dirToRemove} #--drive-use-trash=false
       results=$?
@@ -87,7 +92,7 @@ echo
 #########################################################
 # Show number of d_errors and t_errors during Backup transfer.
 #########################################################
-printf "** Backuip/Transfer completed with ${d_errors} Delete errors and ${t_errors} Transfer errors.\n\n"
+printf "  ** Backuip/Transfer completed with ${d_errors} Delete errors and ${t_errors} Transfer errors.\n\n"
 # Show time to do the transfer
 #########################################################
 STOPTIME=$(($(date +%s)-STARTTIME))
