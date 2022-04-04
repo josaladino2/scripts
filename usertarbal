@@ -13,9 +13,9 @@ cd /
 check_error () {
 	local result=${1}
 	if [ ${result} -eq 0 ] || [ ${result} -eq 1 ]; then
-		printf "Done! (${result})\n\n"
+		printf "Done! (${result})\n"
 	else
-		printf "FAILED! (${result})\n\n"
+		printf "FAILED! (${result})\n"
 		r_errors=$((r_errors+1))
 	fi
 }
@@ -27,7 +27,7 @@ backupNow () {
 	printf "\n**** ${User} ****"
 	FileName="${User}-dir-${FileDate}.tgz"
 	rm -f /${localDir}/${FileDate}/${FileName} >/dev/null 2>&1
-	printf "\n** Making ${User} tarbal (/${localDir}/${FileDate}/${FileName})..."
+	printf "\n  **** Making \"${User}\" tarbal (/${localDir}/${FileDate}/${FileName})..."
 	tar -czf /${localDir}/${FileDate}/${FileName} -X /root/scripts/${User}-Exclude ${Dir}
 	results=$?
 	check_error ${results}
@@ -38,27 +38,54 @@ if \ls "${HOME}/usertarbal\*.err" >/dev/null 2>&1; then
 	rm -f ${HOME}/usertarbal*.err > /dev/null 2>&1
 fi
 r_errors=0
-for U D in root root y4x home/y4x elton home/elton tim home/tim joe home/joe
+for U D in root root y4x home/y4x elton home/elton tim home/tim joe home/joe linuxbrew home/linuxbrew
 do
+	STARTTIME2=$(date +%s)
 	backupNow ${U} ${D}
-	ls -hla /${localDir}/${FileDate}/${FileName}
+	Results="$(ls -1rtAhl /${localDir}/${FileDate}/${FileName}| awk '{print $5,$6,$7,$8,$9}')"
+	printf "    ${Results}\n"
+	STOPTIME2=$(($(date +%s)-STARTTIME2))
+	STOPSTR2="    ** \"${U}\" Tarball Backup completed in"
+  show_time ${STOPTIME2} "${STOPSTR2}"
 done
 # Show number of t_errors during Backup transfer.
-echo -e "\nTarbals completed with ${r_errors} errors.\n"
+echo -e "\n**** Tarbals completed with ${r_errors} errors.\n"
 # Move files to Dropbox
-printf "Moving local tarbal files to ${remoteDir}/${FileDate}/..."
+printf "**** Moving local tarbal files to ${remoteDir}/${FileDate}/..."
 rclone moveto /${localDir}/${FileDate} ${remoteDir}/${FileDate} --cache-db-purge 2>/root/${localDir}${FileDate}.err
 #mv /${localDir}/${FileDate} /${cloudDir}
 results=$?
 if [ ${results} -eq 0 ] || [ ${results} -eq 1 ]; then
 	echo "Done."
 else
-	echo "Errors"
+	echo "Errors."
+fi
+# Delete old backups
+#
+echo "**** Delete Old usertarbal Backups"
+rbaseDir="DropBox:/usertarbal/"
+maxNrOfBackups=6
+nrOfBackups=$(rclone lsf ${rbaseDir} --max-depth 1 | wc -l)
+if [[ nrOfBackups -gt maxNrOfBackups ]]; then
+	echo "  ** Removing old backups"
+	rclone lsf ${rbaseDir} --max-depth 1 | sort -r | tail -$(( nrOfBackups - maxNrOfBackups )) |
+	while read -r dirToRemove; do
+		printf "%s" "  ** rclone purge ${rbaseDir}/${dirToRemove}..."
+		rclone purge ${rbaseDir}/${dirToRemove} --drive-use-trash=false
+		results=$?
+		if [[ results -eq 0 ]]; then
+			echo "Done."
+		else
+			echo "Errors."
+		fi
+	done
+else
+	echo "  ** No Old Backups to Delete"
 fi
 # Show time to do the transfer
 STOPTIME=$(($(date +%s)-STARTTIME))
 echo
-echo "**** /usertarbal completed in $(show_time ${STOPTIME})"
+show_time ${STOPTIME} "**** User Tarbal Backup Backups completed in"
 echo
 if [ ! -s ${HOME}/${localDir}${FileDate}.err ]; then
 	rm -f ${HOME}/${localDir}${FileDate}.err ] < /dev/null 2>&1
