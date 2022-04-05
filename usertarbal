@@ -63,7 +63,7 @@ fi
 # Delete old backups
 #
 echo "**** Delete Old usertarbal Backups"
-rbaseDir="DropBox:/usertarbal/"
+rbaseDir="DropBox:/usertarbal"
 maxNrOfBackups=6
 nrOfBackups=$(rclone lsf ${rbaseDir} --max-depth 1 | wc -l)
 if [[ nrOfBackups -gt maxNrOfBackups ]]; then
