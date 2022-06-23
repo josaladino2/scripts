@@ -5,8 +5,8 @@ source "${HOME}/.bash_functions"
 STARTTIME=$(date +%s)
 STARTTIME2=$(date +%s)
 
-echo "**** Preparing Backup settings."
-echo
+printf "**** Preparing Backup settings."
+(
 #
 # Bash script for creating backups of Nextcloud.
 #
@@ -278,6 +278,13 @@ else
 fi
 echo
 STOPTIME2=$(($(date +%s)-STARTTIME2))
+) /dev/null 2>&1
+results=$?
+if [[ results -eq 0 ]]; then
+	echo "Done."
+else
+	echo "Errors."
+fi
 show_time ${STOPTIME2} "  ** Nextcloud Backup Preparation completed in"
 echo
 
@@ -302,7 +309,7 @@ if [[ BackupStep -lt 2 ]] && [ "${backupFileDir}" = true ]; then
 		echo
 		exit
 	fi
-	echo
+#	echo
 	STOPTIME2=$(($(date +%s)-STARTTIME2))
 	show_time ${STOPTIME2} "  ** Backup of Nextcloud Home Directory completed in"
 	if [[ BackupStep -lt 2 ]]; then
@@ -341,7 +348,7 @@ if [[ BackupStep -lt 3 ]] && [ "${backupInternalData}" = true ]; then
 	results=$?
 	if [[ results -eq 0 ]] || [[ results -eq 1 ]]; then
 		echo "Done"
-	  echo
+#	  echo
 	else
 		echo "Fatal tar Error"
 		echo
@@ -390,7 +397,7 @@ if [[ BackupStep -lt 4 ]] && [ "${backupExternalData}" = true ]; then
 			echo "Fatal tar Error"
     	exit $results
 		fi
-		echo
+#		echo
 	else
 		echo "  Skipping Nextcloud Local External Data Directory backup."
 	fi
@@ -436,9 +443,9 @@ if [[ BackupStep -lt 5 ]]; then
       echo "Errors"
       printf "%s\n" "  ${FileToCheck} NOT Removed!"
     fi
-    echo
-    ls -hl ${FileToCheck}*
-    echo
+#    echo
+    ls -hl ${FileToCheck}*|indent 3 2
+#    echo
 	fi
   STOPTIME2=$(($(date +%s)-STARTTIME2))
 	show_time ${STOPTIME2} "  ** Spliting ${FileToCheck} completed in"
@@ -485,7 +492,7 @@ if [[ BackupStep -lt 6 ]]; then
 				echo "Errors."
 			fi
 		fi
-		echo
+#		echo
 		STOPTIME2=$(($(date +%s)-STARTTIME2))
 		show_time ${STOPTIME2} "  ** Backup Nextcloud MySQL DB completed in"
 		if [[ BackupStep -lt 6 ]]; then
@@ -515,13 +522,13 @@ if [[ BackupStep -eq 6 ]]; then
   rclone ${CMD} ${currentDate} ${remoteDir} --cache-db-purge
 	results=$?
 	if [[ results -eq 0 ]]; then
-		echo "  Done"
-		printf  "\n%s" "  ** Deleting local ${sourceDir}..."
+		echo "Done"
+		printf  "%s" "  ** Deleting local ${sourceDir}..."
 		/usr/bin/rm -rf ${sourceDir} >/dev/null 2>&1 && echo "Done" || echo "Errors"
 	else
-		echo "  Errors."
+		echo "Errors."
 	fi
-	echo
+#	echo
 	STOPTIME2=$(($(date +%s)-STARTTIME2))
 	show_time ${STOPTIME2} "  ** Moving of Backup to ${remoteDir} completed in"
 	echo )
@@ -616,7 +623,7 @@ if [[ $BackupStep -eq 9 ]]; then
 			echo "  ** No Old Backups to Delete"
 		fi
 	fi
-	echo
+#	echo
 	STOPTIME2=$(($(date +%s)-STARTTIME2))
 	show_time ${STOPTIME2} "  ** Backup Final cleanup completed in"
 	if [[ BackupStep -lt 10 ]]; then
