@@ -6,7 +6,6 @@ STARTTIME=$(date +%s)
 STARTTIME2=$(date +%s)
 
 printf "**** Preparing Backup settings."
-(
 #
 # Bash script for creating backups of Nextcloud.
 #
@@ -179,11 +178,9 @@ echo "  ** Check if root user"
 if [ "$(id -u)" != "0" ]
 then
 	echo "    ERROR: This script must be run as root!"
-	echo
 	exit 1
 else
 	echo "    User is root"
-	echo
 fi
 
 # Enable maintenance mode
@@ -204,7 +201,7 @@ else
 	echo "    Maintenance Mode (OFF)"
 	MaintenanceModeStatus="Off"
 fi
-echo
+#echo
 
 #
 # Stop web server
@@ -223,7 +220,7 @@ if [ "${disableWebServer}" = true ]; then
 else
 	echo "    Web server is still running"
 fi
-echo
+#echo
 
 if [ -e "${BackupStepFile}" ]; then
 	BackupStep=$(cat "${BackupStepFile}")
@@ -250,9 +247,9 @@ if [[ -z ${BackupStep} ]] || [[ BackupStep -lt 2 ]]; then
   BackupStep=0
   echo $BackupStep > "${BackupStepFile}"
 else
-	printf "%s\n" "    Skip Checking If ${sourceDir} Exists."
+	echo "    Skip Checking If ${sourceDir} Exists."
 fi
-echo
+#echo
 
 # Step 1
 #
@@ -276,15 +273,8 @@ if [[ $BackupStep -lt 5 ]]; then
 else
 	echo "    Skipping Remote Backup Directory Exists check."
 fi
-echo
+#echo
 STOPTIME2=$(($(date +%s)-STARTTIME2))
-) >/dev/null 2>&1
-results=$?
-if [[ results -eq 0 ]]; then
-	echo "Done."
-else
-	echo "Errors."
-fi
 show_time ${STOPTIME2} "  ** Nextcloud Backup Preparation completed in"
 echo
 
@@ -306,7 +296,6 @@ if [[ BackupStep -lt 2 ]] && [ "${backupFileDir}" = true ]; then
 		echo "Done"
 	else
 		echo "Error"
-		echo
 		exit
 	fi
 #	echo
@@ -351,7 +340,7 @@ if [[ BackupStep -lt 3 ]] && [ "${backupInternalData}" = true ]; then
 #	  echo
 	else
 		echo "Fatal tar Error"
-		echo
+#		echo
 		exit
 	fi
 	STOPTIME2=$(($(date +%s)-STARTTIME2))  
@@ -433,7 +422,7 @@ if [[ BackupStep -lt 5 ]]; then
 	if [[ ThisFileSize -gt fSize ]]; then
     printf "%s\n" "  ** File Size > ${FileSize}"
     printf "%s" "  ** Spliting ${FileToCheck} into ${FileSize} parts..."
-    ( split -d -b ${FileSize} "${FileToCheck}" "${FileToCheck}.part" )
+    ( split -d -b ${FileSize} "${FileToCheck}" "${FileToCheck}.part" >/dev/null 2>&1 )
     results=$?
 		if [[ results -eq 0 ]]; then
       echo "Done"
@@ -562,13 +551,13 @@ if [[ BackupStep -eq 7 ]]; then
 			echo "Errors."
 		fi
 	else
-		echo "    Web server is still running..."
+		echo "    Web server is still running."
 	fi
 	if [[ BackupStep -lt 8 ]]; then
 		BackupStep=8
 		echo $BackupStep > "${BackupStepFile}"
 	fi
-	echo
+#	echo
 fi
 
 # Step 9
@@ -594,7 +583,7 @@ if [[ BackupStep -eq 8 ]]; then
 		BackupStep=9
 		echo $BackupStep > "${BackupStepFile}"
 	fi
-	echo
+#	echo
 fi
 
 # Step 10
@@ -640,7 +629,7 @@ echo
 if [[ BackupStep -eq 10 ]]; then
 	printf "%s\n" "List of files on ${rbaseDir}:"
 	( echo "----------------"
-	rclone tree ${rbaseDir} -asD --human-readable
+	rclone tree ${rbaseDir} -asD --human-readable | grep -v 'tgz'
 	echo "----------------" )  
 	echo
 	printf "%s\n" "**** ${remoteDir} Backup DONE!"
