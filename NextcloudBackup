@@ -98,7 +98,7 @@ BackupStepFile="${lbaseDir}/BackupStep"
 
 # Check if DropBox Remote is mounted
 printf "%s" "  Checking if ${rcDrive}: is mounted..."
-rclonemount DB > /dev/null 2>&1
+rclonemount DB >/dev/null 2>&1
 results=$?
 if [[ results -eq 0 ]]; then
 	echo "Done"
@@ -278,7 +278,7 @@ else
 fi
 echo
 STOPTIME2=$(($(date +%s)-STARTTIME2))
-) /dev/null 2>&1
+) >/dev/null 2>&1
 results=$?
 if [[ results -eq 0 ]]; then
 	echo "Done."
@@ -651,5 +651,5 @@ STOPTIME=$(($(date +%s)-STARTTIME))
 show_time ${STOPTIME} "**** Nextcloud Backup completed in"
 echo
 if [ ! -s ${HOME}/NextcloudBackup.err ]; then
-	rm -f ${HOME}/NextcloudBackup.err < /dev/null 2>&1
+	rm -f ${HOME}/NextcloudBackup.err >/dev/null 2>&1
 fi
