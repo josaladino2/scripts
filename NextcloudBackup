@@ -150,7 +150,7 @@ dbUser='y4x_nc_user'
 dbPassword='bokstari46'
 
 # TODO: The maximum number of backups to keep (when set to 0, all backups are kept)
-maxNrOfBackups=6
+maxNrOfBackups=4
 
 # File names for backup files
 # If you prefer other file names, you'll also have to change the NextcloudRestore.sh script.
