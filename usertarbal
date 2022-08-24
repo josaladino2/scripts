@@ -1,4 +1,4 @@
-#!/usr/bin/zsh
+#!/usr/local/bin/zsh
 # Users Tarbal
 STARTTIME=$(date +%s)
 FileDate="${1:-$(date +%F)}"
@@ -53,7 +53,6 @@ echo -e "\n**** Tarbals completed with ${r_errors} errors.\n"
 # Move files to Dropbox
 printf "**** Moving local tarbal files to ${remoteDir}/${FileDate}/..."
 rclone moveto /${localDir}/${FileDate} ${remoteDir}/${FileDate} --cache-db-purge 2>/root/${localDir}${FileDate}.err
-#mv /${localDir}/${FileDate} /${cloudDir}
 results=$?
 if [ ${results} -eq 0 ] || [ ${results} -eq 1 ]; then
 	echo "Done."
