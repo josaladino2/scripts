@@ -78,6 +78,7 @@ if [[ nrOfBackups -gt maxNrOfBackups ]]; then
 			echo "Errors."
 		fi
 	done
+	~/bin/cleanfolder -m 6 -d -p /usertarbal
 else
 	echo "  ** No Old Backups to Delete"
 fi
