@@ -119,6 +119,9 @@ ignoreUpdaterBackups=true
 # Exclude these files
 ExcludeTheseFiles="--exclude-from=/root/scripts/NextcloudBackup-Exclude"
 
+# NextcloudBackup Log file name
+ncBackupLog='ncBackup.log'
+
 # TODO: The directory of your Nextcloud installation (this is a directory under your web root)
 nextcloudFileDir='/home/y4x/public_html/nextcloud'
 
@@ -236,8 +239,8 @@ if [[ -z ${BackupStep} ]] || [[ BackupStep -lt 2 ]]; then
 	if [ -d "${sourceDir}" ]; then
 		printf "%s\n" "    WARNING: ${sourceDir} already exists!"
 		printf "%s" "    Deleting ${sourceDir} & ${BackupStepFile}..."
-		( /usr/bin/rm -rf "${sourceDir}"
-		/usr/bin/rm -f "${BackupStepFile}" ) && echo "Done." || echo "Error."
+		( rm -rf "${sourceDir}"
+		rm -f "${BackupStepFile}" ) && echo "Done." || echo "Error."
 		printf "%s" "    Creating ${sourceDir}..."
 		mkdir -p "${sourceDir}" && echo "Done." || echo "Error."
 	else
@@ -287,9 +290,9 @@ if [[ BackupStep -lt 2 ]] && [ "${backupFileDir}" = true ]; then
 	STARTTIME2=$(date +%s)
 	printf "  ** Creating backup of Nextcloud Home Directory..."
 	if [ "$useCompression" = true ] ; then
-		tar -cp${Verbose}zf "${sourceDir}/${fileNameBackupFileDir}" ${ExcludeTheseFiles} -C "${nextcloudFileDir}" . 2>${HOME}/NextcloudBackup.err
+		tar -cp${Verbose}zf "${sourceDir}/${fileNameBackupFileDir}" ${ExcludeTheseFiles} -C "${nextcloudFileDir}" . 1> ${sourceDir}/$ncBackupLog 2>${HOME}/NextcloudBackup.err
 	else
-		tar -cp${Verbose}f "${sourceDir}/${fileNameBackupFileDir}" ${ExcludeTheseFiles} -C "${nextcloudFileDir}" . 2>>${HOME}/NextcloudBackup.err
+		tar -cp${Verbose}f "${sourceDir}/${fileNameBackupFileDir}" ${ExcludeTheseFiles} -C "${nextcloudFileDir}" . 1>> ${sourceDir}/$ncBackupLog 2>>${HOME}/NextcloudBackup.err
 	fi
 	results=$?
 	if [[ results -eq 0 ]] || [[ results -eq 1 ]]; then
@@ -322,16 +325,16 @@ if [[ BackupStep -lt 3 ]] && [ "${backupInternalData}" = true ]; then
 		echo "  ** Ignoring updater backup directory"
 		printf "  ** Creating backup of Nextcloud Internal data directory..."
 		if [ "$useCompression" = true ] ; then
-		tar -cp${Verbose}zf "${sourceDir}/${fileNameBackupDataDir}" ${ExcludeTheseFiles} --exclude="updater-*" -C "${nextcloudDataDir}" . 2>>${HOME}/NextcloudBackup.err
+		tar -cp${Verbose}zf "${sourceDir}/${fileNameBackupDataDir}" ${ExcludeTheseFiles} --exclude="updater-*" -C "${nextcloudDataDir}" . 1>> ${sourceDir}/$ncBackupLog 2>>${HOME}/NextcloudBackup.err
 		else
-			tar -cp${Verbose}f "${sourceDir}/${fileNameBackupDataDir}" ${ExcludeTheseFiles} --exclude="updater-*" -C "${nextcloudDataDir}" . 2>>${HOME}/NextcloudBackup.err
+			tar -cp${Verbose}f "${sourceDir}/${fileNameBackupDataDir}" ${ExcludeTheseFiles} --exclude="updater-*" -C "${nextcloudDataDir}" . 1>> ${sourceDir}/$ncBackupLog 2>>${HOME}/NextcloudBackup.err
 		fi
 	else
 		printf "  ** Creating backup of Nextcloud Internal data directory..."
 		if [ "$useCompression" = true ] ; then
-			tar -cp${Verbose}zf "${sourceDir}/${fileNameBackupDataDir}" ${ExcludeTheseFiles} -C "${nextcloudDataDir}" . 2>>${HOME}/NextcloudBackup.err
+			tar -cp${Verbose}zf "${sourceDir}/${fileNameBackupDataDir}" ${ExcludeTheseFiles} -C "${nextcloudDataDir}" . 1>> ${sourceDir}/$ncBackupLog 2>>${HOME}/NextcloudBackup.err
 		else
-			tar -cp${Verbose}f "${sourceDir}/${fileNameBackupDataDir}" ${ExcludeTheseFiles} -C "${nextcloudDataDir}" . 2>>${HOME}/NextcloudBackup.err
+			tar -cp${Verbose}f "${sourceDir}/${fileNameBackupDataDir}" ${ExcludeTheseFiles} -C "${nextcloudDataDir}" . 1>> ${sourceDir}/$ncBackupLog 2>>${HOME}/NextcloudBackup.err
 		fi
 	fi
 	results=$?
@@ -367,16 +370,16 @@ if [[ BackupStep -lt 4 ]] && [ "${backupExternalData}" = true ]; then
 			echo "  ** Ignoring updater backup directory"
 			printf "  ** Creating backup of Nextcloud local External Data Directory..."
 			if [ "$useCompression" = true ]; then
-				tar -cp${Verbose}zf "${sourceDir}/${fileNameBackupExternalDataDir}" ${ExcludeTheseFiles} --exclude="updater-*/backups/*" -C "${nextcloudLocalExternalDataDir}" . 2>>${HOME}/NextcloudBackup.err
+				tar -cp${Verbose}zf "${sourceDir}/${fileNameBackupExternalDataDir}" ${ExcludeTheseFiles} --exclude="updater-*/backups/*" -C "${nextcloudLocalExternalDataDir}" . 1>> ${sourceDir}/$ncBackupLog 2>>${HOME}/NextcloudBackup.err
 			else
-				tar -cp${Verbose}f "${sourceDir}/${fileNameBackupExternalDataDir}" ${ExcludeTheseFiles} --exclude="updater-*/backups/*" -C "${nextcloudLocalExternalDataDir}" . 2>>${HOME}/NextcloudBackup.err
+				tar -cp${Verbose}f "${sourceDir}/${fileNameBackupExternalDataDir}" ${ExcludeTheseFiles} --exclude="updater-*/backups/*" -C "${nextcloudLocalExternalDataDir}" . 1>> ${sourceDir}/$ncBackupLog 2>>${HOME}/NextcloudBackup.err
 			fi
 		else
 			printf "  ** Creating backup of Nextcloud local External Data Directory..."
-			if [ "$useCompression" = true ] ; then
-				tar -cp${Verbose}zf "${sourceDir}/${fileNameBackupExternalDataDir}" ${ExcludeTheseFiles} -C "${nextcloudLocalExternalDataDir}" . 2>>${HOME}/NextcloudBackup.err
+			if [ "$useCompression" = true ]; then
+				tar -cp${Verbose}zf "${sourceDir}/${fileNameBackupExternalDataDir}" ${ExcludeTheseFiles} -C "${nextcloudLocalExternalDataDir}" . 1>> ${sourceDir}/$ncBackupLog 2>>${HOME}/NextcloudBackup.err
 			else
-				tar -cp${Verbose}f "${sourceDir}/${fileNameBackupExternalDataDir}" ${ExcludeTheseFiles} -C "${nextcloudLocalExternalDataDir}" . 2>>${HOME}/NextcloudBackup.err
+				tar -cp${Verbose}f "${sourceDir}/${fileNameBackupExternalDataDir}" ${ExcludeTheseFiles} -C "${nextcloudLocalExternalDataDir}" . 1>> ${sourceDir}/$ncBackupLog 2>>${HOME}/NextcloudBackup.err
 			fi
 		fi
 		results=$?
@@ -427,7 +430,7 @@ if [[ BackupStep -lt 5 ]]; then
 		if [[ results -eq 0 ]]; then
       echo "Done"
 			printf "%s" "  ** Deleting ${FileToCheck}..."
-      /usr/bin/rm -f ${FileToCheck} >/dev/null 2>&1 && echo "Done." || echo "Errors."
+      rm -f ${FileToCheck} >/dev/null 2>&1 && echo "Done." || echo "Errors."
     else
       echo "Errors"
       printf "%s\n" "  ${FileToCheck} NOT Removed!"
@@ -513,7 +516,7 @@ if [[ BackupStep -eq 6 ]]; then
 	if [[ results -eq 0 ]]; then
 		echo "Done"
 		printf  "%s" "  ** Deleting local ${sourceDir}..."
-		/usr/bin/rm -rf ${sourceDir} >/dev/null 2>&1 && echo "Done" || echo "Errors"
+		rm -rf ${sourceDir} >/dev/null 2>&1 && echo "Done" || echo "Errors"
 	else
 		echo "Errors."
 	fi
@@ -634,7 +637,7 @@ if [[ BackupStep -eq 10 ]]; then
 	echo
 	printf "%s\n" "**** ${remoteDir} Backup DONE!"
 	echo
-	/usr/bin/rm -f "${BackupStepFile}"
+	rm -f "${BackupStepFile}"
 fi
 STOPTIME=$(($(date +%s)-STARTTIME))
 show_time ${STOPTIME} "**** Nextcloud Backup completed in"

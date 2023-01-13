@@ -74,11 +74,12 @@ if [[ nrOfBackups -gt maxNrOfBackups ]]; then
 		results=$?
 		if [[ results -eq 0 ]]; then
 			echo "Done."
+			rm -rf /${localDir}/${FileDate}
 		else
 			echo "Errors."
 		fi
 	done
-	~/bin/cleanfolder -m 6 -d -p /usertarbal
+#	~/bin/cleanfolder -m 6 -d -p /usertarbal
 else
 	echo "  ** No Old Backups to Delete"
 fi
