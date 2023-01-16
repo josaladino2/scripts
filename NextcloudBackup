@@ -85,6 +85,7 @@ backupInternalData=false
 backupExternalData=true
 backupDatabase=true
 currentDate=$(date +"%Y%m%d")
+yesterdayDate=$(date --date="yesterday" +"%Y%m%d")
 rcDrive="DropBox"
 baseDirName=${1:-ncBackup}
 # The actual directories of the current backup - this is a subdirectory of the main directory above with a timestamp
@@ -630,9 +631,10 @@ echo
 if [[ BackupStep -eq 10 ]]; then
 	printf "%s\n" "List of files on ${rbaseDir}:"
 	( echo "----------------"
-	rclone tree ${rbaseDir} -asD --human-readable | grep -v 'tgz'
+	rclone tree ${rbaseDir} -asD --human-readable #| grep -v 'tgz'
 	echo "----------------" )  
 	echo
+	diffbk
 	printf "%s\n" "**** ${remoteDir} Backup DONE!"
 	echo
 	rm -f "${BackupStepFile}"
