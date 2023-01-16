@@ -6,7 +6,7 @@
 ./*/files_trashbin/*
 ./*/files_versions/*
 ./ownbackup/*
-./*/backup/*
+./appdata_*/backup/*
 */tmp/*
 */.*un~
 */*un~
