@@ -412,6 +412,7 @@ if [[ BackupStep -lt 5 ]]; then
 	else
 		SplitFile=${fileNameBackupExternalDataDir}
 	fi
+	rclonemount db >/dev/null 2>&1
 	cd "${sourceDir}" || exit
 		FileSize="30G"
     fSize=$(echo ${FileSize} | numfmt --from=iec)
@@ -421,7 +422,7 @@ if [[ BackupStep -lt 5 ]]; then
 			ncBackupLogRaw='ncBackupRaw.log'
 			ncBackupLogFull='ncBackupFull.log'
 			ncBackupLogShort='ncBackupSort.log'
-			tar -tvzf ${FileToCheck} 1> ${ncBackupLogRaw} 2>/dev/null
+			tar -tvzf ${FileToCheck} 1> ${ncBackupLogRaw} 2>/dev/null 1> ${ncBackupLogRaw} 2>/dev/null
 			tar -tvzf ${FileToCheck} |awk -v FIELDWIDTHS="10 8 13 10 6 *" \
 				'{printf "%s\t %7.3fG\t %s\t %s\t %s\n", $3, val = $3/1024/1024, $4, $5, $6}' 1> ${ncBackupLogFull} 2>/dev/null
 			tar -tvzf ${FileToCheck} |awk -v FIELDWIDTHS="10 8 13 10 6 *" \
