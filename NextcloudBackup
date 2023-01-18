@@ -642,7 +642,7 @@ if [[ BackupStep -eq 10 ]]; then
 	rclone tree ${rbaseDir} -asD --human-readable #| grep -v 'tgz'
 	echo "----------------" )  
 	echo
-	diffbk
+	diffraw # see also difffull and diffsort
 	printf "%s\n" "**** ${remoteDir} Backup DONE!"
 	echo
 	rm -f "${BackupStepFile}"
