@@ -418,8 +418,14 @@ if [[ BackupStep -lt 5 ]]; then
     FileToCheck=${SplitFile}
 		if [ -n "${Verbose}" ]; then
 			# NextcloudBackup Log file name
-			ncBackupLog='ncBackup.log'
-			tar -tvzf ${FileToCheck} > ${ncBackupLog}
+			ncBackupLogRaw='ncBackupRaw.log'
+			ncBackupLogFull='ncBackupFull.log'
+			ncBackupLogShort='ncBackupSort.log'
+			tar -tvzf ${FileToCheck} 1> ${ncBackupLogRaw} 2>/dev/null
+			tar -tvzf ${FileToCheck} |awk -v FIELDWIDTHS="10 8 13 10 6 *" \
+				'{printf "%s\t %7.3fG\t %s\t %s\t %s\n", $3, val = $3/1024/1024, $4, $5, $6}' 1> ${ncBackupLogFull} 2>/dev/null
+			tar -tvzf ${FileToCheck} |awk -v FIELDWIDTHS="10 8 13 10 6 *" \
+				'{printf "%7.3fG\t %s\n", val = $3/1024/1024, $6}' 1> ${ncBackupLogShort} 2>/dev/null
 		fi
     ThisFileSize=$(stat -c %s "${FileToCheck}")
     echo "**** Checking File Size"
