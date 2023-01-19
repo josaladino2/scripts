@@ -421,7 +421,7 @@ if [[ BackupStep -lt 5 ]]; then
 			# NextcloudBackup Log file name
 			ncBackupLogRaw='ncBackupRaw.log'
 			ncBackupLogFull='ncBackupFull.log'
-			ncBackupLogShort='ncBackupSort.log'
+			ncBackupLogShort='ncBackupShort.log'
 			tar -tvzf ${FileToCheck} 1> ${ncBackupLogRaw} 2>/dev/null 1> ${ncBackupLogRaw} 2>/dev/null
 			tar -tvzf ${FileToCheck} |awk -v FIELDWIDTHS="10 8 13 10 6 *" \
 				'{printf "%s\t %7.3fG\t %s\t %s\t %s\n", $3, val = $3/1024/1024, $4, $5, $6}' 1> ${ncBackupLogFull} 2>/dev/null
@@ -643,7 +643,7 @@ if [[ BackupStep -eq 10 ]]; then
 	rclone tree ${rbaseDir} -asD --human-readable #| grep -v 'tgz'
 	echo "----------------" )  
 	echo
-	diffraw # see also difffull and diffsort
+	diffraw # see also difffull and diffshort
 	printf "%s\n" "**** ${remoteDir} Backup DONE!"
 	echo
 	rm -f "${BackupStepFile}"
