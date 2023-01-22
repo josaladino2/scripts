@@ -644,7 +644,7 @@ if [[ BackupStep -eq 10 ]]; then
 	echo "----------------" )  
 	echo "New Files in this Backup (diffraw)."
 	echo "----------------"
-	diffraw # see also difffull and diffshort
+	diffshort # see also diffraw, difffull and diffshort
 	printf "%s\n" "**** ${remoteDir} Backup DONE!"
 	echo
 	rm -f "${BackupStepFile}"
