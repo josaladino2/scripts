@@ -34,7 +34,6 @@ EnableMaintenanceMode () {
 
 DisableMaintenanceMode () {
 	printf "Switching off maintenance mode..."
-	A
 	sudo -u "${webserverUser}" php "${nextcloudFileDir}"/occ maintenance:mode --off
 	echo "Done"
 	echo
@@ -86,9 +85,9 @@ backupExternalData=true
 backupDatabase=true
 currentDate=$(date +"%Y%m%d")
 yesterdayDate=$(date --date="yesterday" +"%Y%m%d")
-rcDrive="DropBox"
 baseDirName=${1:-ncBackup}
 # The actual directories of the current backup - this is a subdirectory of the main directory above with a timestamp
+rcDrive="DropBox"
 rbaseDir="${rcDrive}:/${baseDirName}" 
 remoteDir="${rbaseDir}/${currentDate}"
 lremoteDir="/home/Cloud/${rcDrive}/${baseDirName}/${currentDate}"

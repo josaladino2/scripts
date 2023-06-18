@@ -11,8 +11,8 @@ DestDir="MySQL-Backups"
 CloudDir="home/Cloud"
 terrors=0
 mkdir -p /${DestDir}/${FileDateDir}/
-localDir=${DestDir}/${FileDateDir}/
-mkdir -p /${CloudDir}/${DestDrive}/${DestDir}/${FileDateDir}/
+localDir="${DestDir}/${FileDateDir}/"
+#mkdir -p /${CloudDir}/${DestDrive}/${DestDir}/${FileDateDir}/
 remoteDir=${DestDrive}:/${DestDir}/${FileDateDir}/
 #/root/scripts/rclonemount DB
 #results=$?
@@ -26,15 +26,15 @@ backupnow () {
 	local db=${1}
 	ThisFile="${db}-${FileName}.sql.gz"
 	printf "*** ${db}\n"
-	printf "Exporting ${db} database(s) to /${DestDir}/${FileDateDir}/${ThisFile}..."
+	printf "Exporting ${db} database(s) to /${localDir}/${ThisFile}..."
 	if [ "${db}" = "all" ]; then
-		{ /usr/bin/mysqldump -uroot --all-databases | gzip -c > ${FileDateDir}/${ThisFile}; } >/dev/null 2>&1 && \
+		{ /usr/bin/mysqldump -uroot --all-databases | gzip -c > /${localDir}/${ThisFile}; } >/dev/null 2>&1 && \
 			printf "Done.\n" || \
 			{ printf " Errors.\n"
 				terrors=$((terrors+1))
 				printf "\n${db} DB Backup with errors.\n\n"; }
 	else
-		{ /usr/bin/mysqldump -uroot --databases ${db} | gzip -c > ${FileDateDir}/${ThisFile}; } >/dev/null 2>&1 && \
+		{ /usr/bin/mysqldump -uroot --databases ${db} | gzip -c > /${localDir}/${ThisFile}; } >/dev/null 2>&1 && \
 			printf "Done.\n" || \
 			{ printf " Errors.\n"
 				terrors=$((terrors+1))
@@ -47,7 +47,7 @@ movebackup () {
 	local errors=0
 	rm -f /var/log/rclonedb.log
 	printf "*** Copying /${localDir} to ${DestDrive}:/${DestDir}/${FileDateDir}..."
-	rclone copy ${FileDateDir} ${DestDrive}:/${DestDir}/${FileDateDir} \
+	rclone copy /${localDir} ${DestDrive}:/${DestDir}/${FileDateDir} \
 		--cache-db-purge \
 		--log-file "/var/log/rclonedb.log" \
 		--log-level INFO \
