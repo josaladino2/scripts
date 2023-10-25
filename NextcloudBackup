@@ -96,14 +96,14 @@ sourceDir="${lbaseDir}/${currentDate}"
 BackupStepFile="${lbaseDir}/BackupStep"
 
 # Check if DropBox Remote is mounted
-printf "%s" "  Checking if ${rcDrive}: is mounted..."
-rclonemount DB >/dev/null 2>&1
-results=$?
-if [[ results -eq 0 ]]; then
-	echo "Done"
-else
-	printf "%s\n" "Error (${results})"
-fi
+#printf "%s" "  Checking if ${rcDrive}: is mounted..."
+#rclonemount DB >/dev/null 2>&1
+#results=$?
+#if [[ results -eq 0 ]]; then
+#	echo "Done"
+#else
+#	printf "%s\n" "Error (${results})"
+#fi
 
 # TODO: Use compression for Matrix Synapse installation/lib dir
 # When this is the only script for backups, it's recommend to enable compression.
@@ -253,30 +253,30 @@ fi
 
 # Step 1
 #
-if [[ $BackupStep -lt 5 ]]; then
-	#
-	# Check if remote backup dir already exists
-	#
-	printf "%s\n" "  ** Check if ${remoteDir} Exists."
-	ls -d ${lremoteDir} >/dev/null 2>&1
-	results=$?
-	if [[ results -eq 0 ]]; then
-		printf "%s\n" "    WARNING: ${remoteDir} already exists!"
-		printf "%s\n" "    Backup will Overwrite ${remoteDir}."
-	else
-		printf "%s\n" "    ${remoteDir} will be created automatically"
-	fi
-	if [[ BackupStep -lt 1 ]]; then
-		BackupStep=1
- 		echo $BackupStep > "${BackupStepFile}"
-	fi
-else
-	echo "    Skipping Remote Backup Directory Exists check."
-fi
+#if [[ $BackupStep -lt 5 ]]; then
+#	#
+#	# Check if remote backup dir already exists
+#	#
+#	printf "%s\n" "  ** Check if ${remoteDir} Exists."
+#	ls -d ${lremoteDir} >/dev/null 2>&1
+#	results=$?
+#	if [[ results -eq 0 ]]; then
+#		printf "%s\n" "    WARNING: ${remoteDir} already exists!"
+#		printf "%s\n" "    Backup will Overwrite ${remoteDir}."
+#	else
+#		printf "%s\n" "    ${remoteDir} will be created automatically"
+#	fi
+#	if [[ BackupStep -lt 1 ]]; then
+#		BackupStep=1
+# 		echo $BackupStep > "${BackupStepFile}"
+#	fi
+#else
+#	echo "    Skipping Remote Backup Directory Exists check."
+#fi
+##echo
+#STOPTIME2=$(($(date +%s)-STARTTIME2))
+#show_time ${STOPTIME2} "  ** Nextcloud Backup Preparation completed in"
 #echo
-STOPTIME2=$(($(date +%s)-STARTTIME2))
-show_time ${STOPTIME2} "  ** Nextcloud Backup Preparation completed in"
-echo
 
 # Step 2
 #
@@ -517,8 +517,8 @@ if [[ BackupStep -eq 6 ]]; then
 	cd ${lbaseDir}
 	echo "**** Moving Nextcloud Backup to Remote"
 	printf "%s"  "  ** rclone ${CMD} [From:]${currentDate} [To:]${remoteDir}..."
-#	DropBoxMode="--dropbox-batch-mode --dropbox-chunk-size 128M"
-  rclone ${CMD} ${currentDate} ${remoteDir} --cache-db-purge
+	DropBoxMode="--transfers 32 --dropbox-batch-mode sync --dropbox-chunk-size 128M"
+  rclone ${CMD} ${currentDate} ${remoteDir} ${DropBoxMode} --cache-db-purge
 	results=$?
 	if [[ results -eq 0 ]]; then
 		echo "Done"
