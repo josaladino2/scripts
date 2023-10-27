@@ -517,8 +517,10 @@ if [[ BackupStep -eq 6 ]]; then
 	cd ${lbaseDir}
 	echo "**** Moving Nextcloud Backup to Remote"
 	printf "%s"  "  ** rclone ${CMD} [From:]${currentDate} [To:]${remoteDir}..."
-	DropBoxMode="--transfers 32 --dropbox-batch-mode sync --dropbox-chunk-size 128M"
-  rclone ${CMD} ${currentDate} ${remoteDir} ${DropBoxMode} --cache-db-purge
+	DropBoxMode1="--transfers 32"
+	DropBoxMode2="--dropbox-batch-mode sync"
+	DropBoxMode3="--dropbox-chunk-size 128M"
+  rclone ${CMD} ${currentDate} ${remoteDir} ${DropBoxMode1} ${DropBoxMode2} ${DropBoxMode3} --cache-db-purge
 	results=$?
 	if [[ results -eq 0 ]]; then
 		echo "Done"
@@ -645,6 +647,10 @@ if [[ BackupStep -eq 10 ]]; then
 	echo "----------------"
 	diffshort # see also diffraw, difffull and diffshort
 	printf "%s\n" "**** ${remoteDir} Backup DONE!"
+	echo "----------------" )  
+	echo "Listing of ${lbaseDir} - Should be empty."
+	ls ${lbaseDir}
+	echo "----------------" )  
 	echo
 	rm -f "${BackupStepFile}"
 fi
