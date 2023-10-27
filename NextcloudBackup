@@ -520,7 +520,7 @@ if [[ BackupStep -eq 6 ]]; then
 	DropBoxMode1="--transfers 32"
 	DropBoxMode2="--dropbox-batch-mode sync"
 	DropBoxMode3="--dropbox-chunk-size 128M"
-  rclone ${CMD} ${currentDate} ${remoteDir} ${DropBoxMode1} ${DropBoxMode2} ${DropBoxMode3} --cache-db-purge
+  rclone ${CMD} ${currentDate} ${remoteDir} ${DropBoxMode2} ${DropBoxMode3} --cache-db-purge
 	results=$?
 	if [[ results -eq 0 ]]; then
 		echo "Done"
