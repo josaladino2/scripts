@@ -253,7 +253,7 @@ fi
 
 # Step 1
 #
-rm -rf ${lbaseDir}/202*
+rm -rf ${lbaseDir}/*
 #if [[ $BackupStep -lt 5 ]]; then
 #	#
 #	# Check if remote backup dir already exists
