@@ -95,6 +95,9 @@ lbaseDir="/${baseDirName}"
 sourceDir="${lbaseDir}/${currentDate}"
 BackupStepFile="${lbaseDir}/BackupStep"
 
+# Cleanup ${lbaseDir}
+\rm -rf ${lbaseDir}/20* ${lbaseDir}/B* 2>/dev/null
+
 # Check if DropBox Remote is mounted
 #printf "%s" "  Checking if ${rcDrive}: is mounted..."
 #rclonemount DB >/dev/null 2>&1
@@ -253,7 +256,6 @@ fi
 
 # Step 1
 #
-rm -rf ${lbaseDir}/202*
 #if [[ $BackupStep -lt 5 ]]; then
 #	#
 #	# Check if remote backup dir already exists
@@ -309,6 +311,8 @@ if [[ BackupStep -lt 2 ]] && [ "${backupFileDir}" = true ]; then
 else
 	echo "  Skipping backup of Nextcloud Home Directory."
 fi
+STOPTIME2=$(($(date +%s)-STARTTIME2))  
+show_time ${STOPTIME2} "  ** Backup of Nextcloud Home Directed completed in"
 echo
 
 # Step 3
@@ -362,8 +366,8 @@ if [[ BackupStep -lt 4 ]] && [ "${backupExternalData}" = true ]; then
 	# Backup Local External Data Directory
 	#
 	echo "**** Backup Nextcloud Local External Data Directory"
+	STARTTIME2=$(date +%s)
 	if [ "${backupExternalData}" = true ]; then
-		STARTTIME2=$(date +%s)
 		if [ "$ignoreUpdaterBackups" = true ]; then
 			echo "  ** Ignoring updater backup directory"
 			printf "  ** Creating backup of Nextcloud local External Data Directory..."
@@ -405,8 +409,8 @@ echo
 # Step 5
 # Split file into 30G parts
 # Either Internal or External data backup must be "true"
+STARTTIME2=$(date +%s)
 if [[ BackupStep -lt 5 ]]; then
-  STARTTIME2=$(date +%s)
 	if [ "${backupInternalData}" = true ]; then
 		SplitFile=${fileNameBackupDataDir}
 	else
@@ -447,8 +451,6 @@ if [[ BackupStep -lt 5 ]]; then
     ls -hl ${FileToCheck}*|indent 3 2
 #    echo
 	fi
-  STOPTIME2=$(($(date +%s)-STARTTIME2))
-	show_time ${STOPTIME2} "  ** Spliting ${FileToCheck} completed in"
 	if [[ BackupStep -lt 5 ]]; then
 		BackupStep=5
 		echo $BackupStep > "${BackupStepFile}"
@@ -456,17 +458,19 @@ if [[ BackupStep -lt 5 ]]; then
 else
 	echo "  Skipping Split File of Backup."
 fi
+STOPTIME2=$(($(date +%s)-STARTTIME2))
+show_time ${STOPTIME2} "  ** Spliting ${FileToCheck} completed in"
 echo
 
 # Step 6
 #
+STARTTIME2=$(date +%s)
 if [[ BackupStep -lt 6 ]]; then
 	#
 	# Backup DB
 	#
 	echo "**** Nextcloud Database"
 	if [ "${backupDatabase}" = true ]; then
-		STARTTIME2=$(date +%s)
 		if [ "${databaseSystem}" = "mysql" ] || [ "${databaseSystem}" = "mariadb" ]; then
 			printf "%s" "  ** Backup Nextcloud database (MySQL/MariaDB)..."
 			if ! [ -x "$(command -v mysqldump)" ]; then
@@ -493,8 +497,6 @@ if [[ BackupStep -lt 6 ]]; then
 			fi
 		fi
 #		echo
-		STOPTIME2=$(($(date +%s)-STARTTIME2))
-		show_time ${STOPTIME2} "  ** Backup Nextcloud MySQL DB completed in"
 		if [[ BackupStep -lt 6 ]]; then
 			BackupStep=6
 			echo $BackupStep > "${BackupStepFile}"
@@ -505,23 +507,27 @@ if [[ BackupStep -lt 6 ]]; then
 else
 	echo "  Skipping DB backup."
 fi
+STOPTIME2=$(($(date +%s)-STARTTIME2))
+show_time ${STOPTIME2} "  ** Backup Nextcloud MySQL DB completed in"
 echo
 
 # Step 7
 #
+STARTTIME2=$(date +%s)
 if [[ BackupStep -eq 6 ]]; then
 	#
 	# Move backup to remote ${remoteDir}
 	#
 	( CMD="moveto"
-	STARTTIME2=$(date +%s)
 	cd ${lbaseDir}
 	echo "**** Moving Nextcloud Backup to Remote"
 	printf "%s"  "  ** rclone ${CMD} [From:]${currentDate} [To:]${remoteDir}..."
-	DropBoxMode1="--transfers 32"
+	DropBoxMode1="--transfers=32"
 	DropBoxMode2="--dropbox-batch-mode sync"
 	DropBoxMode3="--dropbox-chunk-size 128M"
-  rclone ${CMD} ${currentDate} ${remoteDir} "${DropBoxMode1}" "${DropBoxMode2}" "${DropBoxMode3}" --cache-db-purge
+#	DropBoxMode="${DropBoxMode1} ${DropBoxMode2} ${DropBoxMode3}"
+	DropBoxMode=""
+  rclone ${CMD} ${currentDate} ${remoteDir} "${DropBoxMode}" --cache-db-purge
 	results=$?
 	if [[ results -eq 0 ]]; then
 		echo "Done"
@@ -531,8 +537,6 @@ if [[ BackupStep -eq 6 ]]; then
 		echo "Errors."
 	fi
 #	echo
-	STOPTIME2=$(($(date +%s)-STARTTIME2))
-	show_time ${STOPTIME2} "  ** Moving of Backup to ${remoteDir} completed in"
 	echo )
 	if [[ BackupStep -lt 7 ]]; then
 		BackupStep=7
@@ -542,16 +546,18 @@ else
 	echo "  Skipping Nextcloud backup Move to Remote."
 	echo
 fi
+STOPTIME2=$(($(date +%s)-STARTTIME2))
+show_time ${STOPTIME2} "  ** Moving of Backup to ${remoteDir} completed in"
 
 # Step 8
 #
 # Final cleanup of backups files
 #
+STARTTIME2=$(date +%s)
 if [[ BackupStep -eq 7 ]]; then
 	#
 	# Start web serv
 	#
-	STARTTIME2=$(date +%s)
 	echo "**** Final cleanup of Backup Files"
 	echo "  ** Check Web Server"
 	if [ ${disableWebServer} = true ]; then
@@ -626,8 +632,6 @@ if [[ $BackupStep -eq 9 ]]; then
 		fi
 	fi
 #	echo
-	STOPTIME2=$(($(date +%s)-STARTTIME2))
-	show_time ${STOPTIME2} "  ** Backup Final cleanup completed in"
 	if [[ BackupStep -lt 10 ]]; then
 		BackupStep=10
 		echo $BackupStep > "${BackupStepFile}"
@@ -635,6 +639,8 @@ if [[ $BackupStep -eq 9 ]]; then
 else
 	echo "  Skip Delete Old Nextcloud Backups."
 fi
+STOPTIME2=$(($(date +%s)-STARTTIME2))
+show_time ${STOPTIME2} "  ** Backup Final cleanup completed in"
 echo
 
 # Step 11
