@@ -97,6 +97,7 @@ BackupStepFile="${lbaseDir}/BackupStep"
 
 # Cleanup ${lbaseDir}
 \rm -rf ${lbaseDir}/20*
+\rm -rf ${lbaseDir}/B* 2>/dev/null
 
 # Check if DropBox Remote is mounted
 #printf "%s" "  Checking if ${rcDrive}: is mounted..."
