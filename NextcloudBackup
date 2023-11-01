@@ -280,15 +280,17 @@ fi
 ##echo
 #STOPTIME2=$(($(date +%s)-STARTTIME2))
 #show_time ${STOPTIME2} "  ** Nextcloud Backup Preparation completed in"
+STOPTIME2=$(($(date +%s)-STARTTIME2))  
+show_time ${STOPTIME2} "  ** Backup Preparation completed in"
 #echo
 
 # Step 2
 #
+STARTTIME2=$(date +%s)
 if [[ BackupStep -lt 2 ]] && [ "${backupFileDir}" = true ]; then
 	# Backup home directory
 	#
 	echo "**** Backup Nextcloud Home Directory"
-	STARTTIME2=$(date +%s)
 	printf "  ** Creating backup of Nextcloud Home Directory..."
 	if [ "$useCompression" = true ] ; then
 		tar -cpzf "${sourceDir}/${fileNameBackupFileDir}" ${ExcludeTheseFiles} -C "${nextcloudFileDir}" . 2>${HOME}/NextcloudBackup.err
@@ -303,8 +305,6 @@ if [[ BackupStep -lt 2 ]] && [ "${backupFileDir}" = true ]; then
 		exit
 	fi
 #	echo
-	STOPTIME2=$(($(date +%s)-STARTTIME2))
-	show_time ${STOPTIME2} "  ** Backup of Nextcloud Home Directory completed in"
 	if [[ BackupStep -lt 2 ]]; then
 		BackupStep=2
 		echo $BackupStep > "${BackupStepFile}"
@@ -318,12 +318,12 @@ echo
 
 # Step 3
 #
+STARTTIME2=$(date +%s)
 if [[ BackupStep -lt 3 ]] && [ "${backupInternalData}" = true ]; then
 	#
 	# Backup Local Internal Data directory
 	#
 	echo "**** Backup Nextcloud Local Internal Data Directory"
-	STARTTIME2=$(date +%s)
 	if [ "$ignoreUpdaterBackups" = true ]; then
 		echo "  ** Ignoring updater backup directory"
 		printf "  ** Creating backup of Nextcloud Internal data directory..."
@@ -349,8 +349,6 @@ if [[ BackupStep -lt 3 ]] && [ "${backupInternalData}" = true ]; then
 #		echo
 		exit
 	fi
-	STOPTIME2=$(($(date +%s)-STARTTIME2))  
-	show_time ${STOPTIME2} "  ** Backup of Internal Data completed in"
 	if [[ BackupStep -lt 3 ]]; then
 		BackupStep=3
 		echo $BackupStep > "${BackupStepFile}"
@@ -358,16 +356,18 @@ if [[ BackupStep -lt 3 ]] && [ "${backupInternalData}" = true ]; then
 else
 	echo "**** Skipping Nextcloud local Data Directory backup."
 fi
+STOPTIME2=$(($(date +%s)-STARTTIME2))  
+show_time ${STOPTIME2} "  ** Backup of Internal Data completed in"
 echo
 
 # Step 4
 #
+STARTTIME2=$(date +%s)
 if [[ BackupStep -lt 4 ]] && [ "${backupExternalData}" = true ]; then
 	#
 	# Backup Local External Data Directory
 	#
 	echo "**** Backup Nextcloud Local External Data Directory"
-	STARTTIME2=$(date +%s)
 	if [ "${backupExternalData}" = true ]; then
 		if [ "$ignoreUpdaterBackups" = true ]; then
 			echo "  ** Ignoring updater backup directory"
@@ -396,8 +396,6 @@ if [[ BackupStep -lt 4 ]] && [ "${backupExternalData}" = true ]; then
 	else
 		echo "  Skipping Nextcloud Local External Data Directory backup."
 	fi
-	STOPTIME2=$(($(date +%s)-STARTTIME2))
-	show_time ${STOPTIME2} "  ** Backup of External Data Directory completed in"
 	if [[ BackupStep -lt 4 ]]; then
 		BackupStep=4
 		echo $BackupStep > "${BackupStepFile}"
@@ -405,6 +403,8 @@ if [[ BackupStep -lt 4 ]] && [ "${backupExternalData}" = true ]; then
 else
 	echo "  Skipping Nextcloud Local External Data Directory backup."
 fi
+STOPTIME2=$(($(date +%s)-STARTTIME2))
+show_time ${STOPTIME2} "  ** Backup of External Data Directory completed in"
 echo
 
 # Step 5
@@ -662,9 +662,9 @@ if [[ BackupStep -eq 10 ]]; then
 	echo
 	rm -f "${BackupStepFile}"
 fi
-STOPTIME=$(($(date +%s)-STARTTIME))
-show_time ${STOPTIME} "**** Nextcloud Backup completed in"
 echo
 if [ ! -s ${HOME}/NextcloudBackup.err ]; then
 	rm -f ${HOME}/NextcloudBackup.err >/dev/null 2>&1
 fi
+STOPTIME=$(($(date +%s)-STARTTIME))
+show_time ${STOPTIME} "**** Nextcloud Backup completed in"
