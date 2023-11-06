@@ -77,6 +77,7 @@ CtrlC () {
 # Variables
 # ************************************************
 # TODO: Set these variables to control the backup
+DB="db"
 MaintenanceModeOn=false
 disableWebServer=false
 backupFileDir=true
@@ -95,13 +96,9 @@ lbaseDir="/${baseDirName}"
 sourceDir="${lbaseDir}/${currentDate}"
 BackupStepFile="${lbaseDir}/BackupStep"
 
-# Cleanup ${lbaseDir}
-\rm -rf ${lbaseDir}/20*
-#\rm -rf ${lbaseDir}/B* 2>/dev/null
-
 # Check if DropBox Remote is mounted
 #printf "%s" "  Checking if ${rcDrive}: is mounted..."
-#rclonemount DB >/dev/null 2>&1
+#rclonemount ${DB} >/dev/null 2>&1
 #results=$?
 #if [[ results -eq 0 ]]; then
 #	echo "Done"
@@ -417,7 +414,7 @@ if [[ BackupStep -lt 5 ]]; then
 	else
 		SplitFile=${fileNameBackupExternalDataDir}
 	fi
-	rclonemount db >/dev/null 2>&1
+	rclonemount ${DB} >/dev/null 2>&1
 	cd "${sourceDir}" || exit
 		FileSize="30G"
     fSize=$(echo ${FileSize} | numfmt --from=iec)
@@ -468,7 +465,7 @@ echo
 STARTTIME2=$(date +%s)
 if [[ BackupStep -lt 6 ]]; then
 	#
-	# Backup DB
+	# Backup ${DB}
 	#
 	echo "**** Nextcloud Database"
 	if [ "${backupDatabase}" = true ]; then
@@ -503,13 +500,13 @@ if [[ BackupStep -lt 6 ]]; then
 			echo $BackupStep > "${BackupStepFile}"
 		fi
 	else
-		echo "  Skipping DB Backup."
+		echo "  Skipping ${DB} Backup."
 	fi
 else
-	echo "  Skipping DB backup."
+	echo "  Skipping ${DB} backup."
 fi
 STOPTIME2=$(($(date +%s)-STARTTIME2))
-show_time ${STOPTIME2} "  ** Backup Nextcloud MySQL DB completed in"
+show_time ${STOPTIME2} "  ** Backup Nextcloud MySQL ${DB} completed in"
 echo
 
 # Step 7
@@ -521,13 +518,22 @@ if [[ BackupStep -eq 6 ]]; then
 	#
 	( CMD="moveto"
 	cd ${lbaseDir}
-	echo "**** Moving Nextcloud Backup to Remote"
+	echo "**** Moving Nextcloud Backup to ${RemoteDir}"
 	printf "%s"  "  ** rclone ${CMD} [From:]${currentDate} [To:]${remoteDir}..."
-	DropBoxMode1="--transfers=32"
-	DropBoxMode2="--dropbox-batch-mode sync"
-	DropBoxMode3="--dropbox-chunk-size 128M"
-	DropBoxMode="${DropBoxMode1} ${DropBoxMode2} ${DropBoxMode3}"
-  rclone ${CMD} ${currentDate} ${remoteDir} --cache-db-purge
+	rclone \
+		--log-file "/var/log/rclone.log" \
+		--log-level=DEBUG \
+		--cache-dir=${HOME}/.cache/rclone/cron/${DB}-${USER} \
+		--cache-db-path=${HOME}/.cache/rclone/cron/${DB}-${USER}/cache-backend \
+		--buffer-size=128M \
+		--transfers=64 \
+		--use-mmap \
+		--drive-use-trash=false \
+		--drive-disable-http2=false \
+		--cache-db-purge=true	\
+		--dropbox-batch-mode=sync \
+		--dropbox-chunk-size=128M \
+		${CMD} ${currentDate} ${remoteDir}
 	results=$?
 	if [[ results -eq 0 ]]; then
 		echo "Done"

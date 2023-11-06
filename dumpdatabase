@@ -14,7 +14,7 @@ mkdir -p /${DestDir}/${FileDateDir}/
 localDir="${DestDir}/${FileDateDir}/"
 #mkdir -p /${CloudDir}/${DestDrive}/${DestDir}/${FileDateDir}/
 remoteDir=${DestDrive}:/${DestDir}/${FileDateDir}/
-#/root/scripts/rclonemount DB
+#/root/scripts/rclonemount db
 #results=$?
 #if [ $results -eq 0 ]; then
 #	cd "/${DestDir}"
