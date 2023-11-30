@@ -1,0 +1,14 @@
+*/.*un~
+*/.Trash/*
+*/mail/*
+*cpanel*
+*/logs/*
+*/log/*
+*/spool/*
+*/lock/*
+*/cache/*
+*/.cache/*
+*/crash/*
+*/tmp/*
+*/temp/*
+*/vfs/*

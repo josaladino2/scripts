@@ -38,7 +38,7 @@ if \ls "${HOME}/usertarbal\*.err" >/dev/null 2>&1; then
 	rm -f ${HOME}/usertarbal*.err > /dev/null 2>&1
 fi
 r_errors=0
-for U D in root root y4x home/y4x elton home/elton tim home/tim joe home/joe ken home/ken linuxbrew home/linuxbrew
+for U D in root root y4x home/y4x elton home/elton tim home/tim randy home/randy joe home/joe ken home/ken linuxbrew home/linuxbrew
 do
 	STARTTIME2=$(date +%s)
 	backupNow ${U} ${D}
