@@ -233,10 +233,10 @@ if [[ -z ${BackupStep} ]] || [[ BackupStep -lt 2 ]]; then
 	#
 	# Check if local backup dir already exists give overwrite warning
 	#
-	printf "%s\n" "  ** Check if local Backup Directory ${sourceDir} Exists."
+#	printf "%s\n" "  ** Check if local Backup Directory ${sourceDir} Exists."
 	if [ -d "${sourceDir}" ]; then
-		printf "%s\n" "    WARNING: ${sourceDir} already exists!"
-		printf "%s" "    Deleting ${sourceDir} & ${BackupStepFile}..."
+#		printf "%s\n" "    WARNING: ${sourceDir} already exists!"
+#		printf "%s" "    Deleting ${sourceDir} & ${BackupStepFile}..."
 		( rm -rf "${sourceDir}"
 		rm -f "${BackupStepFile}" ) && echo "Done." || echo "Error."
 		printf "%s" "    Creating ${sourceDir}..."
@@ -311,7 +311,7 @@ else
 fi
 STOPTIME2=$(($(date +%s)-STARTTIME2))  
 show_time ${STOPTIME2} "  ** Backup of Nextcloud Home Directed completed in"
-echo
+#echo
 
 # Step 3
 #
@@ -355,7 +355,7 @@ else
 fi
 STOPTIME2=$(($(date +%s)-STARTTIME2))  
 show_time ${STOPTIME2} "  ** Backup of Internal Data completed in"
-echo
+#echo
 
 # Step 4
 #
@@ -402,7 +402,7 @@ else
 fi
 STOPTIME2=$(($(date +%s)-STARTTIME2))
 show_time ${STOPTIME2} "  ** Backup of External Data Directory completed in"
-echo
+#echo
 
 # Step 5
 # Split file into 30G parts
@@ -446,7 +446,7 @@ if [[ BackupStep -lt 5 ]]; then
       printf "%s\n" "  ${FileToCheck} NOT Removed!"
     fi
 #    echo
-    ls -hl ${FileToCheck}*|indent 3 2
+#    ls -hl ${FileToCheck}*|indent 3 2
 #    echo
 	fi
 	if [[ BackupStep -lt 5 ]]; then
@@ -458,7 +458,7 @@ else
 fi
 STOPTIME2=$(($(date +%s)-STARTTIME2))
 show_time ${STOPTIME2} "  ** Spliting ${FileToCheck} completed in"
-echo
+#echo
 
 # Step 6
 #
@@ -507,7 +507,7 @@ else
 fi
 STOPTIME2=$(($(date +%s)-STARTTIME2))
 show_time ${STOPTIME2} "  ** Backup Nextcloud MySQL ${DB} completed in"
-echo
+#echo
 
 # Step 7
 #
@@ -543,14 +543,15 @@ if [[ BackupStep -eq 6 ]]; then
 		echo "Errors."
 	fi
 #	echo
-	echo )
+#	echo
+	)
 	if [[ BackupStep -lt 7 ]]; then
 		BackupStep=7
 		echo $BackupStep > "${BackupStepFile}"
 	fi
 else
 	echo "  Skipping Nextcloud backup Move to Remote."
-	echo
+#	echo
 fi
 STOPTIME2=$(($(date +%s)-STARTTIME2))
 show_time ${STOPTIME2} "  ** Moving of Backup to ${remoteDir} completed in"
@@ -647,27 +648,28 @@ else
 fi
 STOPTIME2=$(($(date +%s)-STARTTIME2))
 show_time ${STOPTIME2} "  ** Backup Final cleanup completed in"
-echo
+#echo
 
 # Step 11
 #
 if [[ BackupStep -eq 10 ]]; then
 	printf "%s\n" "List of files on ${rbaseDir}:"
-	( echo "----------------"
-	rclone tree ${rbaseDir} -asD --human-readable #| grep -v 'tgz'
-	echo "----------------" )  
+#	( echo "----------------"
+#	rclone tree ${rbaseDir} -asD --human-readable #| grep -v 'tgz'
+#	)  
+	echo "----------------"  
 	echo "New Files in this Backup (diffraw)."
 	echo "----------------"
 	diffshort # see also diffraw, difffull and diffshort
 	printf "%s\n" "**** ${remoteDir} Backup DONE!"
+	rm -f "${BackupStepFile}" >/dev/null 2>&1
 	echo "----------------"
 	echo "Listing of ${lbaseDir} - Should be empty."
 	ls ${lbaseDir}
 	echo "----------------"
-	echo
-	rm -f "${BackupStepFile}"
+#	echo
 fi
-echo
+#echo
 if [ ! -s ${HOME}/NextcloudBackup.err ]; then
 	rm -f ${HOME}/NextcloudBackup.err >/dev/null 2>&1
 fi
