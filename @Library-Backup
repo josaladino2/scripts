@@ -1,17 +1,21 @@
 #!/usr/bin/zsh
 STARTTIME=$(date +%s)
 BackupVer="N"
-FileName="ASA-Files-$(date +"%Y%m%d")"
+FileName="@Library-Files-$(date +"%Y%m%d")"
 FileDateDir="$(date +%F)"
 RStorage="DropBox"
-DestDir="${RStorage}:/ASALR-Backups"
-WorkDir="ASALR-Backups"
+DestDir="${RStorage}:/@Library-Backups"
+WorkDir="@Libary-Backups"
 localDir=${WorkDir}/${FileDateDir}
 mkdir -p /${localDir}
 remoteDir=${DestDir}/${FileDateDir}
 SourceDir="var/nc_data/joe"
-SourceFiles='files/@ASA-Library-Resources'
-SourceFilesVer='files_versions/@ASA-Library-Resources'
+SourceFiles='files/@Joe-Library'
+if [ -d "files_versions/@Joe-Library-Resources" ]; then
+  SourceFilesVer='files_versions/@Joe-Library-Resources'
+else
+  SourceFilesVer=''
+fi
 #########################################################
 t_errors=0
 d_errors=0
@@ -68,7 +72,7 @@ fi
 # Delete old folders
 #########################################################
 maxNrOfBackups=6
-echo "**** Delete Old ASALR Backups"
+echo "**** Delete Old @Library-Backup files"
 nrOfBackups=$(rclone lsf ${DestDir} | wc -l)
 if [[ nrOfBackups -gt maxNrOfBackups ]]; then
   echo "  ** Removing old backups"
@@ -92,9 +96,9 @@ echo
 #########################################################
 # Show number of d_errors and t_errors during Backup transfer.
 #########################################################
-printf "  ** Backuip/Transfer completed with ${d_errors} Delete errors and ${t_errors} Transfer errors.\n\n"
+printf "  ** @Library Backuip/Transfer completed with ${d_errors} Delete errors and ${t_errors} Transfer errors.\n\n"
 # Show time to do the transfer
 #########################################################
 STOPTIME=$(($(date +%s)-STARTTIME))
-show_time ${STOPTIME} "**** ASLR-Backup completed in"
+show_time ${STOPTIME} "**** @Library-Backup completed in"
 echo
