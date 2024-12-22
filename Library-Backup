@@ -5,7 +5,7 @@ FileName="@Library-Files-$(date +"%Y%m%d")"
 FileDateDir="$(date +%F)"
 RStorage="DropBox"
 DestDir="${RStorage}:/@Library-Backups"
-WorkDir="@Libary-Backups"
+WorkDir="@Library-Backups"
 localDir=${WorkDir}/${FileDateDir}
 mkdir -p /${localDir}
 remoteDir=${DestDir}/${FileDateDir}
