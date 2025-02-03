@@ -471,11 +471,11 @@ if [[ BackupStep -lt 6 ]]; then
 	if [ "${backupDatabase}" = true ]; then
 		if [ "${databaseSystem}" = "mysql" ] || [ "${databaseSystem}" = "mariadb" ]; then
 			printf "%s" "  ** Backup Nextcloud database (MySQL/MariaDB)..."
-			if ! [ -x "$(command -v mysqldump)" ]; then
-				printf "\n%s\n" "ERROR: MySQL/MariaDB not installed (command mysqldump not found)."
+			if ! [ -x "$(command -v mariadb-dump)" ]; then
+				printf "\n%s\n" "ERROR: MySQL/MariaDB not installed (command mariadb-dump not found)."
 				echo "ERROR: No backup of database possible!"
 			else
-				mysqldump --single-transaction -h localhost -u "${dbUser}" -p"${dbPassword}" "${nextcloudDatabase}" > "${sourceDir}/${fileNameBackupDb}"
+				mariadb-dump --single-transaction -h localhost -u "${dbUser}" -p"${dbPassword}" "${nextcloudDatabase}" > "${sourceDir}/${fileNameBackupDb}"
 			fi
 			echo "Done"
 		elif [ "${databaseSystem}" = "postgresql" ] || [ "${databaseSystem}" = "pgsql" ]; then
