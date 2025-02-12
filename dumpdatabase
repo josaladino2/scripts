@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/usr/local/bin/zsh
 STARTTIME=$(date +%s)
 FileName=$(date +"%Y%m%d")
 FileDateDir="$(date +%F)"
@@ -7,7 +7,7 @@ FileDateDir7=$(date +%F --date="7 days ago")
 FileName1=$(date +%Y%m%d --date="1 day ago")
 FileName7=$(date +%Y%m%d --date="7 days ago")
 DestDrive="DropBox"
-DestDir="MySQL-Backups"
+DestDir="mariadb-Backups"
 CloudDir="home/Cloud"
 terrors=0
 mkdir -p /${DestDir}/${FileDateDir}/
@@ -28,13 +28,13 @@ backupnow () {
 	printf "*** ${db}\n"
 	printf "Exporting ${db} database(s) to /${localDir}/${ThisFile}..."
 	if [ "${db}" = "all" ]; then
-		{ /usr/bin/mysqldump -uroot --all-databases | gzip -c > /${localDir}/${ThisFile}; } >/dev/null 2>&1 && \
+		{ /usr/bin/mariadb-dump -uroot --all-databases | gzip -c > /${localDir}/${ThisFile}; } >/dev/null 2>&1 && \
 			printf "Done.\n" || \
 			{ printf " Errors.\n"
 				terrors=$((terrors+1))
 				printf "\n${db} DB Backup with errors.\n\n"; }
 	else
-		{ /usr/bin/mysqldump -uroot --databases ${db} | gzip -c > /${localDir}/${ThisFile}; } >/dev/null 2>&1 && \
+		{ /usr/bin/mariadb-dump -uroot --databases ${db} | gzip -c > /${localDir}/${ThisFile}; } >/dev/null 2>&1 && \
 			printf "Done.\n" || \
 			{ printf " Errors.\n"
 				terrors=$((terrors+1))
@@ -95,7 +95,7 @@ deleteoldbackups () {
 	echo
 }
 
-	for DB in $(mysql -e 'show databases' -s --skip-column-names); do
+	for DB in $(mariadb -e 'show databases' -s --skip-column-names); do
 		if [ "$DB" = "information_schema" ] || [ "$DB" = "performance_schema" ]; then
 			:
 		else
@@ -114,7 +114,7 @@ deleteoldbackups () {
 	# Show time to do the transfer
 	printf "\nDB Backups completed with ** ${terrors} ** total errors.\n\n"
 	STOPTIME=$(($(date +%s)-STARTTIME))
-	show_time ${STOPTIME} "**** MySQL ${DestDrive}:/${DestDir}/${FileDateDir} completed in"
+	show_time ${STOPTIME} "**** mariadb ${DestDrive}:/${DestDir}/${FileDateDir} completed in"
 	echo
 #else
 #	echo "${DestDrive} not mounted"
