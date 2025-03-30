@@ -28,13 +28,13 @@ backupnow () {
 	printf "*** ${db}\n"
 	printf "Exporting ${db} database(s) to /${localDir}/${ThisFile}..."
 	if [ "${db}" = "all" ]; then
-		{ /usr/bin/mariadb-dump -uroot --all-databases | gzip -c > /${localDir}/${ThisFile}; } >/dev/null 2>&1 && \
+		{ mysqldump -uroot --all-databases | gzip -c > /${localDir}/${ThisFile}; } >/dev/null 2>&1 && \
 			printf "Done.\n" || \
 			{ printf " Errors.\n"
 				terrors=$((terrors+1))
 				printf "\n${db} DB Backup with errors.\n\n"; }
 	else
-		{ /usr/bin/mariadb-dump -uroot --databases ${db} | gzip -c > /${localDir}/${ThisFile}; } >/dev/null 2>&1 && \
+		{ mysqldump -uroot --databases ${db} | gzip -c > /${localDir}/${ThisFile}; } >/dev/null 2>&1 && \
 			printf "Done.\n" || \
 			{ printf " Errors.\n"
 				terrors=$((terrors+1))
