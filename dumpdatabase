@@ -33,7 +33,7 @@ backupnow () {
 			{ printf " Errors.\n"
 				terrors=$((terrors+1))
 				printf "\n${db} DB Backup with errors.\n\n"; }
-		echo "Making /var/lib/mysql tarbal..."
+		echo -e "\n*** Making /var/lib/mysql tarbal..."
 		systemctl stop mariadb
 		# Check the exit status of the systemctl command
 		if [ $? -eq 0 ]; then
