@@ -8,145 +8,230 @@ FileName1=$(date +%Y%m%d --date="1 day ago")
 FileName7=$(date +%Y%m%d --date="7 days ago")
 DestDrive="DropBox"
 DestDir="mariadb-Backups"
-CloudDir="home/Cloud"
 terrors=0
-mkdir -p /${DestDir}/${FileDateDir}/
-localDir="${DestDir}/${FileDateDir}/"
-#mkdir -p /${CloudDir}/${DestDrive}/${DestDir}/${FileDateDir}/
-remoteDir=${DestDrive}:/${DestDir}/${FileDateDir}/
-#/root/scripts/rclonemount db
-#results=$?
-#if [ $results -eq 0 ]; then
-#	cd "/${DestDir}"
-	# Functions used
-	#. ~/.bash_functions
-cd "/${DestDir}"
+localDir="${DestDir}/${FileDateDir}"
+LOG_FILE="/tmp/rclone_move.log"
+DBFileName="mariadb-dir-${FileName}.tgz"
+
+# Remove localDir Directory if it Exists
+printf "Checking if /${localDir} exists..."
+if [[ -d "/${localDir}" ]]; then
+	rm -rf "/${localDir}" >/dev/null 2>&1
+fi
+echo "Done."
+
+# Verify the folder exists on the remote
+printf "Checking if ${DestDrive}:/${DestDir}/${FileDateDir} exists..."
+rclone lsd "${DestDrive}:/${DestDir}/${FileDateDir}" >/dev/null 2>&1
+if [[ $? -eq 0 ]]; then
+	{ rclone purge "${DestDrive}:/${DestDir}/${FileDateDir}" \
+	--log-file="${LOG_FILE}" \
+	--log-level INFO >/dev/null 2>&1 } && echo "Done." || { echo "Errors"; ((terrors += 1)); }
+else
+	echo "Done."
+fi
+
+rm -f "/${LOG_FILE}" >/dev/null 2>&1
+
+# Create directory with error checking
+printf "\nMaking /${localDir}/ Directory\n\n"
+mkdir -p "/${localDir}" || { echo "Failed to create directory ${localDir}"; exit 1; }
+cd "/${DestDir}" || { echo "Failed to cd to /${DestDir}"; exit 1; }
 
 backupnow () {
 	local db=${1}
 	ThisFile="${db}-${FileName}.sql.gz"
-	printf "*** ${db}\n"
-	printf "Exporting ${db} database(s) to /${localDir}/${ThisFile}..."
+	printf "*** %s\n" "${db}"
+	printf "Exporting ${db} database(s) to %s..." "/${localDir}/${ThisFile}"
+
 	if [ "${db}" = "all" ]; then
-		{ mariadb-dump -uroot --all-databases | gzip -c > /${localDir}/${ThisFile}; } >/dev/null 2>&1 && \
+		{ mariadb-dump -uroot --all-databases \
+			--single-transaction \
+			--quick \
+			--lock-tables=false |\
+			gzip -c > /${localDir}/${ThisFile}; } >/dev/null 2>&1 && \
 			printf "Done.\n" || \
 			{ printf " Errors.\n"
-				terrors=$((terrors+1))
-				printf "\n${db} DB Backup with errors.\n\n"; }
-		echo -e "\n*** Making /var/lib/mysql tarbal..."
-		systemctl stop mariadb
-		# Check the exit status of the systemctl command
-		if [ $? -eq 0 ]; then
-			# Verify if MariaDB is actually running
-			if systemctl is-active mariadb | grep -q "inactive"; then
-				echo "MariaDB stopped successfully"
-			else
-				echo "MariaDB failed to stop or is running"
-				# Optionally, check the error log for details
-				# cat /var/log/mariadb/mariadb.log 2>/dev/null || echo "Error log not found"
-			fi
-		else
-			echo "Failed to execute systemctl stop mariadb"
-		fi
-		tar -czf /${localDir}/mariadb-dir.tgz /var/lib/mysql
-		systemctl start mariadb
-		# Check the exit status of the systemctl command
-		if [ $? -eq 0 ]; then
-			# Verify if MariaDB is actually running
-			if systemctl is-active mariadb | grep -q "active"; then
-				echo "MariaDB started successfully"
-			else
-				echo "MariaDB failed to start or is not running"
-				# Optionally, check the error log for details
-				# cat /var/log/mariadb/mariadb.log 2>/dev/null || echo "Error log not found"
-			fi
-		else
-			echo "Failed to execute systemctl start mariadb"
-		fi
+				((terrors+1))
+				printf "\n%s DB Backup with errors.\n\n" "${db}"; }
 	else
-		{ mariadb-dump -uroot --databases ${db} | gzip -c > /${localDir}/${ThisFile}; } >/dev/null 2>&1 && \
+		{ mariadb-dump -uroot --databases ${db} \
+			--single-transaction \
+			--quick \
+			--lock-tables=false |\
+			gzip -c > /${localDir}/${ThisFile}; } >/dev/null 2>&1 && \
 			printf "Done.\n" || \
 			{ printf " Errors.\n"
-				terrors=$((terrors+1))
-				printf "\n${db} DB Backup with errors.\n\n"; }
+        ((terrors+1))
+        printf "\n%s DB Backup with errors.\n\n" "${db}"; }
 	fi
-	echo
 }
 
-movebackup () {
-	local errors=0
-	rm -f /var/log/rclonedb.log
-	printf "*** Copying /${localDir} to ${DestDrive}:/${DestDir}/${FileDateDir}..."
-	rclone copy /${localDir} ${DestDrive}:/${DestDir}/${FileDateDir} \
+backupmysql () {
+	echo -e "\n*** Backing up /var/lib/mysql."
+
+	# Stop cPanel's service monitoring (tailwatchd or chkservd)
+	printf "Stopping cPanel service monitoring..."
+	if systemctl is-active --quiet tailwatchd; then
+		/scripts/restartsrv_tailwatchd --stop >/dev/null 2>&1 && echo "Done." || { echo "Errors"; ((terrors += 1)); }
+	elif systemctl is-active --quiet chkservd; then
+		/scripts/restartsrv_chkservd --stop >/dev/null 2>&1 && echo "Done." || { echo "Errors"; ((terrors += 1)); }
+	else
+		echo "Warning: Neither tailwatchd nor chkservd is running"
+	fi
+
+	# Verify monitoring is stopped
+	if systemctl is-active --quiet tailwatchd || systemctl is-active --quiet chkservd; then
+		echo "Error: Failed to stop cPanel service monitoring"
+		((terrors += 1))
+	fi
+
+	# Stop MariaDB service
+	printf "Stopping MariaDB service..."
+	systemctl stop mariadb >/dev/null 2>&1
+	if [[ $? -ne 0 ]]; then
+		echo "Error: Failed to stop MariaDB."
+		((terrors += 1))
+		printf "Restarting cpanel services..."
+		# Attempt to restart monitoring before exiting
+		/scripts/restartsrv_tailwatchd --start >/dev/null 2>&1
+		/scripts/restartsrv_chkservd --start >/dev/null 2>&1
+		((terrors += 1))
+		echo "Error."
+		exit 1
+	else
+		echo "Done."
+	fi
+
+	# Verify MariaDB is stopped
+	if systemctl is-active --quiet mariadb; then
+		echo "Error: MariaDB is still running."
+		((terrors += 1))
+		printf "\nRestarting cpanel monitoring before exiting.\n"
+		printf "Starting cpanel tailwatchd..."
+		/scripts/restartsrv_tailwatchd --start >/dev/null 2>&1 && echo "Done." || { echo "Errors"; ((terrors += 1)); }
+		printf "Starting cpanel chkservd..."
+		/scripts/restartsrv_chkservd --start >/dev/null 2>&1 && echo "Done." || { echo "Errors"; ((terrors += 1)); }
+	fi
+
+	# Back up the data directory
+	cd /var/lib || { echo "Failed to cd to /var/lib"; ((terrors += 1)); return 1; }
+	echo "Making ${DBFileName} tarbal in /${localDir}/"
+	tar -czf "/${localDir}/${DBFileName}" mysql >/dev/null 2>&1
+	if [[ $? -eq 0 ]]; then
+		echo "${DBFileName} tarbal created successfully."
+	else
+		# Restart cpanel monitoring before exiting
+		printf "\n%s Tarbal Errors. Restarting MariaDB and cpanel services.\n" "${localDir}/${DBFileName}"
+		((terrors += 1))
+		printf "Starting cpanel tailwatchd..."
+		/scripts/restartsrv_tailwatchd --start >/dev/null 2>&1 && echo "Done." || { echo "Errors"; ((terrors += 1)); }
+		printf "Starting cpanel chkservd..."
+		/scripts/restartsrv_chkservd --start >/dev/null 2>&1 && echo "Done." || { echo "Errors"; ((terrors += 1)); }
+	fi
+
+	# Restart MariaDB service
+	printf "Starting MariaDB service..."
+	systemctl start mariadb
+	if [[ $? -ne 0 ]]; then
+		# Restart MariaDB and monitoring before exiting
+		echo "Error: Failed to start MariaDB."
+		((terrors += 1))
+	else
+		echo "Done."
+	fi
+
+	# Verify MariaDB is running
+	if ! systemctl is-active --quiet mariadb; then
+		echo "Error: MariaDB failed to start"
+		((terrors += 1))
+	fi
+
+	echo "Restarting cPanel service monitoring."
+	printf "Starting cpanel tailwatchd..."
+	/scripts/restartsrv_tailwatchd --start >/dev/null 2>&1 && echo "Done." || { echo "Errors"; ((terrors += 1)); }
+	printf "Starting cpanel chkservd..."
+	/scripts/restartsrv_chkservd --start >/dev/null 2>&1 && echo "Done." || { echo "Errors"; ((terrors += 1)); }
+}
+
+movebackup() {
+	# Ensure source directory exists
+	if [[ ! -d "/${localDir}" ]]; then
+		echo "Error: Source directory /${localDir} does not exist"
+		exit 1
+	fi
+
+	# Move directory contents to remote repository
+	echo "*** Moving /${localDir} to ${DestDrive}:${DestDir}"
+	rclone move "/${localDir}" "${DestDrive}:/${DestDir}/${FileDateDir}" \
 		--cache-db-purge \
-		--log-file "/var/log/rclonedb.log" \
-		--log-level INFO \
 		--buffer-size 64M \
 		--transfers 3 \
 		--drive-use-trash=true \
-		--dropbox-chunk-size 150Mi >/dev/null 2>&1 
-	results=$?
-	if [ $results = 0 ]; then
-		echo "Done."
-		printf "\n%s" "Deleting /${localDir}..."
-		rm -rf /${localDir} >/dev/null 2>&1 && echo "Done." || { echo "Errors."; terrors=$((terrors+1)); }
+		--log-file="${LOG_FILE}" \
+		--log-level INFO \
+		--dropbox-chunk-size 150M \
+		>/dev/null 2>&1
+
+	# Check if the move was successful
+	if [[ $? -eq 0 ]]; then
+		echo "Successfully moved /${localDir} to ${DestDrive}:/${DestDir}"
+		echo "Log file: ${LOG_FILE}"
 	else
-		printf " Errors.\n"
-		terrors=$((terrors+1))
-		printf "\nUploaded Backup with errors.\n\n"
-		terrors=$((terrors+1))
+		echo "Error moving directory. Check ${LOG_FILE} for details"
+		exit 1
 	fi
+
+	echo "Move operation completed"
 }
 
-# Delete old backups
-#
-deleteoldbackups () {
-	maxNrOfBackups=8
-	echo "\n**** Delete Old Nextcloud Backups"
-	nrOfBackups=$(rclone lsf ${DestDrive}:/${DestDir} --include "/2*/" --max-depth 1 | wc -l)
+deleteoldbackups() {
+	local errors=0
+	local maxNrOfBackups=8
+	echo "\n**** Delete Old DB Backups"
+	nrOfBackups=$(rclone lsf "${DestDrive}:/${DestDir}" --include "/2*/" --max-depth 1 | wc -l)
+
 	if [ ${nrOfBackups} -gt ${maxNrOfBackups} ]; then
 		echo "  ** Removing old backups"
-		rclone lsf ${DestDrive}:/${DestDir} --include "/2*/" | \
-			sort -r | tail -$(( nrOfBackups - maxNrOfBackups )) | \
+		rclone lsf "${DestDrive}:/${DestDir}" --include "/2*/" | \
+			sort -r | tail -n $((nrOfBackups - maxNrOfBackups)) | \
 			while read -r dirToRemove; do
-				echo "${DestDrive}:/${DestDir}/${dirToRemove}"
-				printf "    rclone purge ${DestDrive}:/${DestDir}/${dirToRemove}..."
-				rclone purge ${DestDrive}:/${DestDir}/${dirToRemove} --drive-use-trash=true
-				results=$?
-				if [ $results = 0 ]; then
+				printf "    rclone purge %s..." "${DestDrive}:/${DestDir}/${dirToRemove}"
+				rclone purge "${DestDrive}:/${DestDir}/${dirToRemove}" \
+					--log-file="${LOG_FILE}" \
+					--log-level INFO \
+					--drive-use-trash=true
+				if [ $? -eq 0 ]; then
 					echo "Done"
 				else
-					echo "Errors."; errors=$((errors+1))
+					echo "Errors."
+					((errors += 1))
+					((terrors += 1))
 				fi
 			done
-	else
-		echo "  ** No Old Backups to Delete"
-	fi
-	echo
+		else
+			echo "  ** No Old Backups to Delete"
+		fi
+    echo
 }
 
-	for DB in $(mariadb -e 'show databases' -s --skip-column-names); do
-		if [ "$DB" = "information_schema" ] || [ "$DB" = "performance_schema" ]; then
-			:
-		else
-			backupnow ${DB}
-		fi
-	done
-	backupnow "all"
-	movebackup
-	deleteoldbackups
-	printf "*** rclone lsf for ${DestDrive}:/${DestDir}.\n"
-	rclone tree ${DestDrive}:/${DestDir} --exclude "/Save*/" --human-readable 
-#	printf "*** rclone lsf for ${DestDrive}:/${DestDir}/${FileDateDir}/* files.\n"
-#	rclone lsf --format "tsp" --separator "	" ${DestDrive}:/${DestDir}/${FileDateDir} --human-readable 
-	printf "\n*** About/Size of ${DestDrive}/${DestDir}/${FileDateDir}:\n"
-	rclone about ${DestDrive}:/
-	# Show time to do the transfer
-	printf "\nDB Backups completed with ** ${terrors} ** total errors.\n\n"
-	STOPTIME=$(($(date +%s)-STARTTIME))
-	show_time ${STOPTIME} "**** mariadb ${DestDrive}:/${DestDir}/${FileDateDir} completed in"
-	echo
-#else
-#	echo "${DestDrive} not mounted"
-#	echo
-#fi
+for DB in $(mariadb -e 'show databases' -s --skip-column-names); do
+if [[ "$DB" != "information_schema" && "$DB" != "performance_schema" ]]; then
+	backupnow "${DB}"
+fi
+done
+backupnow "all"
+backupmysql
+movebackup
+deleteoldbackups
+
+printf "*** rclone lsf for %s:/%s.\n" "${DestDrive}" "${DestDir}"
+rclone tree "${DestDrive}:/${DestDir}" --exclude "/Save*/" --human-readable
+printf "\n*** About/Size of %s:%s/%s:\n" "${DestDrive}" "${DestDir}" "${FileDateDir}"
+rclone about "${DestDrive}:"
+
+# Show time to do the transfer
+printf "\nDB Backups completed with ** %d ** total errors.\n\n" "${terrors}"
+STOPTIME=$(( $(date +%s) - STARTTIME ))
+show_time ${STOPTIME} "**** mariadb ${DestDrive}:/${DestDir}/${FileDateDir} completed in"
+echo

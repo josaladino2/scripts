@@ -2,10 +2,10 @@
 # Users Tarbal
 STARTTIME=$(date +%s)
 FileDate="${1:-$(date +%F)}"
-Cloud="DropBox"
-remoteDir="${Cloud}:/usertarbal"
+CloudDir="DropBox"
+remoteDir="${CloudDir}:/usertarbal"
+remoteDest="${remoteDir}/${FileDate}"
 localDir="usertarbal"
-cloudDir="home/Cloud/${Cloud}/${localDir}"
 cd /
 [ ! -d /${localDir} ] && mkdir -p /${localDir}
 [ ! -d /${localDir}/${FileDate} ] && mkdir -p /${localDir}/${FileDate}
@@ -38,7 +38,7 @@ if \ls "${HOME}/usertarbal\*.err" >/dev/null 2>&1; then
 	rm -f ${HOME}/usertarbal*.err > /dev/null 2>&1
 fi
 r_errors=0
-for U D in root root y4x home/y4x mmost home/mmost tim home/tim joe home/joe linuxbrew home/linuxbrew
+for U D in root root bram home/bram h4hm home/h4hm y4x home/y4x mmost home/mmost tim home/tim joe home/joe linuxbrew home/linuxbrew
 do
 	STARTTIME2=$(date +%s)
 	backupNow ${U} ${D}
@@ -52,7 +52,7 @@ done
 echo -e "\n**** Tarbals completed with ${r_errors} errors.\n"
 # Move files to Dropbox
 printf "**** Moving local tarbal files to ${remoteDir}/${FileDate}/..."
-rclone moveto /${localDir}/${FileDate} ${remoteDir}/${FileDate} --cache-db-purge 2>/root/${localDir}${FileDate}.err
+rclone move /${localDir}/${FileDate} ${remoteDest}/${FileDate} --cache-db-purge 2>/root/${localDir}${FileDate}.err
 results=$?
 if [ ${results} -eq 0 ] || [ ${results} -eq 1 ]; then
 	echo "Done."
@@ -62,21 +62,21 @@ fi
 # Delete old backups
 #
 echo "**** Delete Old usertarbal Backups"
-rbaseDir="DropBox:/usertarbal"
 maxNrOfBackups=6
-nrOfBackups=$(rclone lsf ${rbaseDir} --max-depth 1 | wc -l)
+nrOfBackups=$(rclone lsf ${remoteDir} --max-depth 1 | wc -l)
 if [[ nrOfBackups -gt maxNrOfBackups ]]; then
 	echo "  ** Removing old backups"
-	rclone lsf ${rbaseDir} --max-depth 1 | sort -r | tail -$(( nrOfBackups - maxNrOfBackups )) |
+	rclone lsf ${remoteDir} --max-depth 1 | sort -r | tail -$(( nrOfBackups - maxNrOfBackups )) |
 	while read -r dirToRemove; do
-		printf "%s" "  ** rclone purge ${rbaseDir}/${dirToRemove}..."
-		rclone purge ${rbaseDir}/${dirToRemove} --drive-use-trash=false
+		printf "%s" "  ** rclone purge ${remoteDir}/${dirToRemove}..."
+		rclone purge ${remoteDir}/${dirToRemove} --drive-use-trash=false
 		results=$?
 		if [[ results -eq 0 ]]; then
 			echo "Done."
-			rm -rf /${localDir}/${FileDate}
+			rm -rf /${localDir}/${FileDate} >/dev/null 2>&1
 		else
 			echo "Errors."
+			rm -rf /${localDir}/${FileDate} >/dev/null 2>&1
 		fi
 	done
 #	~/bin/cleanfolder -m 6 -d -p /usertarbal
