@@ -79,7 +79,9 @@ if [[ nrOfBackups -gt maxNrOfBackups ]]; then
 			rm -rf /${localDir}/${FileDate} >/dev/null 2>&1
 		fi
 	done
-#	~/bin/cleanfolder -m 6 -d -p /usertarbal
+	if [ ! -s /root/${localDir}${FileDate}.err ]; then
+		rm -f /root/${localDir}${FileDate}.err
+	fi
 else
 	echo "  ** No Old Backups to Delete"
 fi
@@ -88,6 +90,10 @@ STOPTIME=$(($(date +%s)-STARTTIME))
 echo
 show_time ${STOPTIME} "**** User Tarbal Backup Backups completed in"
 echo
-if [ ! -s ${HOME}/${localDir}${FileDate}.err ]; then
-	rm -f ${HOME}/${localDir}${FileDate}.err ] < /dev/null 2>&1
+ErrFileName="${HOME}/${localDir}${FileDate}.err"
+if [[ -f ${ErrFileName} && ! -s ${ErrFileName} ]]; then
+	rm -f ${ErrFileName}
+	echo "Deletedd empty file: ${ErrFileName}"
+else
+	echo "File does not exist or is not empty: ${ErrFileName}"
 fi
