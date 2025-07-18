@@ -93,7 +93,7 @@ echo
 ErrFileName="${HOME}/${localDir}${FileDate}.err"
 if [[ -f ${ErrFileName} && ! -s ${ErrFileName} ]]; then
 	rm -f ${ErrFileName}
-	echo "Deletedd empty file: ${ErrFileName}"
+	echo "Deleted empty file: ${ErrFileName}"
 else
 	echo "File does not exist or is not empty: ${ErrFileName}"
 fi
