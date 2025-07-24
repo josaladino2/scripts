@@ -177,6 +177,7 @@ movebackup() {
 	if [[ $? -eq 0 ]]; then
 		echo "Successfully moved /${localDir} to ${DestDrive}:/${DestDir}"
 		echo "Log file: ${LOG_FILE}"
+		rm -rf ${localDir}
 	else
 		echo "Error moving directory. Check ${LOG_FILE} for details"
 		exit 1
