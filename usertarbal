@@ -28,7 +28,7 @@ backupNow () {
 	FileName="${User}-dir-${FileDate}.tgz"
 	rm -f /${localDir}/${FileDate}/${FileName} >/dev/null 2>&1
 	printf "\n  **** Making \"${User}\" tarbal (/${localDir}/${FileDate}/${FileName})..."
-	tar -czf /${localDir}/${FileDate}/${FileName} -X /root/scripts/${User}-Exclude ${Dir} \
+	tar -cvzf /${localDir}/${FileDate}/${FileName} -X /root/scripts/${User}-Exclude ${Dir} \
 		>/${localDir}/${FileDate}/${FileName}.log 2>/${localDir}/${FileDate}/${FileName}.err
 	results=$?
 	check_error ${results}
