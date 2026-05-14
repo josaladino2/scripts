@@ -210,10 +210,11 @@ deleteoldbackups() {
 					((terrors += 1))
 				fi
 			done
-		else
+	else
 			echo "  ** No Old Backups to Delete"
-		fi
-    echo
+	fi
+	echo
+	rm -rf /${DestDir}/* 
 }
 
 for DB in $(mariadb -e 'show databases' -s --skip-column-names); do
