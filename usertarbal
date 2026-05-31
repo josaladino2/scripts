@@ -80,12 +80,11 @@ if [[ nrOfBackups -gt maxNrOfBackups ]]; then
 		results=$?
 		if [[ results -eq 0 ]]; then
 			echo "Done."
-			rm -rf /${localDir}/${FileDate} >/dev/null 2>&1
 		else
 			echo "Errors."
-			rm -rf /${localDir}/${FileDate} >/dev/null 2>&1
 		fi
 	done
+	rm -rf /${localDir}/${FileDate} >/dev/null 2>&1
 	if [ ! -s /root/${localDir}${FileDate}.err ]; then
 		rm -f /root/${localDir}${FileDate}.err
 	fi
