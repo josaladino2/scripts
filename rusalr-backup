@@ -1,4 +1,7 @@
 #!/usr/bin/zsh
+# Load the shared color API without relying on interactive startup.
+fpath=("$HOME/myzfuncs" $fpath)
+autoload -Uz fg_color bg_color
 STARTTIME=$(date +%s)
 BackupVer="N"
 FileName="RUSA-Files-$(date +"%Y%m%d")"
@@ -24,9 +27,9 @@ if [ $BackupVer = "Y" ]; then
   /usr/bin/tar -czf /${WorkDir}/${FileDateDir}/${FileName}-ver.tgz ${SourceFilesVer} >/dev/null 2>&1
   result=$?
   if [[ result -eq 0 ]]; then
-    fg_green "Done."
+    fg_color green "Done."
   else
-    fg_red1 "FAILED!"
+    fg_color red1 "FAILED!"
     t_errors=$((t_errors+1))
     exit 1
   fi
@@ -39,10 +42,10 @@ printf "**** Creating local /${WorkDir}/${FileDateDir}/${FileName}.tgz..."
 /usr/bin/tar -czf /${WorkDir}/${FileDateDir}/${FileName}.tgz ${SourceFiles} >/dev/null 2>&1 
 result=$?
 if [[ result -eq 0 ]]; then
-  fg_green "Done."
+  fg_color green "Done."
   echo
 else
-  fg_red1 "FAILED!"
+  fg_color red1 "FAILED!"
   t_errors=$((t_errors+1))
   echo
   exit 1
@@ -55,11 +58,11 @@ printf "  ** Moving /${WorkDir}/${FileDateDir} to ${remoteDir}..."
 rclone moveto ${FileDateDir} ${remoteDir} --cache-db-purge
 result=$?
 if [[ result -eq 0 ]]; then
-  fg_green "Done."
+  fg_color green "Done."
   rm -rf /${localDir}
   echo
 else
-  fg_red1 "FAILED!"
+  fg_color red1 "FAILED!"
   t_errors=$((t_errors+1))
   echo
   exit 1
